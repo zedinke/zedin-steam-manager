@@ -33,7 +33,7 @@ import { systemApi } from '../../services/api';
 import { useSystemStore } from '../../stores/systemStore';
 import SystemResourceCard from '../../components/System/SystemResourceCard';
 import ServerCard from '../../components/Server/ServerCard';
-// import LogViewer from '../../components/Logs/LogViewer';
+import LogViewer from '../../components/Logs/LogViewer';
 
 interface DashboardProps {}
 
@@ -125,11 +125,11 @@ const Dashboard: React.FC<DashboardProps> = () => {
       </Typography>
 
       {/* Update notification */}
-      {updateInfo?.data?.hasUpdate && (
+      {updateInfo?.hasUpdate && (
         <Card sx={{ mb: 3, backgroundColor: 'warning.dark' }}>
           <CardContent>
             <Typography variant="h6" color="warning.contrastText">
-              Update Available: {updateInfo.data.latestVersion}
+              Update Available: {updateInfo.latestVersion}
             </Typography>
             <Typography variant="body2" color="warning.contrastText">
               A new version is available. Click the Manager Update button to install.
@@ -214,7 +214,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
         </Box>
 
         <Grid container spacing={3}>
-          {servers?.data?.map((server: any) => (
+          {servers?.map((server: any) => (
             <Grid item xs={12} md={6} lg={4} key={server.id}>
               <ServerCard
                 server={server}
@@ -242,17 +242,11 @@ const Dashboard: React.FC<DashboardProps> = () => {
         </DialogTitle>
         <DialogContent>
           {selectedServerId && (
-            <Card sx={{ p: 2, backgroundColor: '#1e1e1e', color: '#ffffff' }}>
-              <Typography variant="h6" gutterBottom>
-                Server {selectedServerId} Logs
-              </Typography>
-              <Typography component="pre" sx={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
-{`[2025-11-12 23:12:57] Server ${selectedServerId} starting...
-[2025-11-12 23:12:58] Loading configuration...
-[2025-11-12 23:12:59] Server started successfully
-[2025-11-12 23:13:00] Listening for connections...`}
-              </Typography>
-            </Card>
+            <LogViewer
+              serverId={selectedServerId}
+              logType="RUNTIME"
+              refreshInterval={1000} // 1 second as required
+            />
           )}
         </DialogContent>
         <DialogActions>
