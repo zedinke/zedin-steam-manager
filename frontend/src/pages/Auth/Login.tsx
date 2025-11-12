@@ -106,7 +106,7 @@ const Login: React.FC = () => {
       formData.append('username', loginForm.email);
       formData.append('password', loginForm.password);
 
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('http://localhost:8000/api/auth/login', {
         method: 'POST',
         body: formData,
       });
@@ -145,7 +145,7 @@ const Login: React.FC = () => {
     }
 
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch('http://localhost:8000/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -198,7 +198,7 @@ const Login: React.FC = () => {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/verify-email', {
+      const response = await fetch('http://localhost:8000/api/auth/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
