@@ -74,13 +74,93 @@ Zedin Steam Manager/
 - Node.js 18+ 
 - Python 3.9+
 - Git
+- Ubuntu/Debian Linux (for production)
+- Non-root user with sudo privileges
+
+### User and Group Setup (Linux/Production)
+
+Before installing, create the proper user and group for the Steam Manager:
+
+```bash
+# 1. Create zedin group
+sudo groupadd zedin
+
+# 2. Create zedin user (system user for service)
+sudo useradd -r -m -g zedin -s /bin/bash zedin
+
+# 3. Add zedin user to sudo group (for system operations)
+sudo usermod -aG sudo zedin
+
+# 4. Create your personal user (if not exists) and add to zedin group
+sudo useradd -m -g users -G zedin -s /bin/bash yourusername
+# OR add existing user to zedin group:
+sudo usermod -aG zedin yourusername
+
+# 5. Set up directory permissions
+sudo mkdir -p /opt/zedin-steam-manager
+sudo mkdir -p /var/lib/zedin/{servers,shared_files,backups}
+sudo mkdir -p /var/log/zedin
+sudo mkdir -p /etc/zedin
+
+# 6. Set proper ownership
+sudo chown -R zedin:zedin /opt/zedin-steam-manager
+sudo chown -R zedin:zedin /var/lib/zedin
+sudo chown -R zedin:zedin /var/log/zedin
+
+# 7. Set directory permissions
+sudo chmod 755 /opt/zedin-steam-manager
+sudo chmod 755 /var/lib/zedin
+sudo chmod 755 /var/log/zedin
+sudo chmod 750 /etc/zedin
+
+# 8. Switch to regular user (NOT root) for installation
+su - yourusername  # Replace with your username
+```
+
+### Important: Installation User Requirements
+
+⚠️ **NEVER run the installer as root!**
+
+The installer must be run as a regular user with sudo privileges because:
+- Root user is blocked for security reasons
+- Services run under dedicated `zedin` user
+- Proper file permissions are automatically set
+- Security policies prevent root service execution
 
 ### Quick Start
 ```bash
-# Clone repository
+# Clone repository (as regular user, NOT root)
 git clone https://github.com/zedinke/zedin-steam-manager.git
 cd zedin-steam-manager
 
+# For development:
+npm run install:all
+npm run dev
+
+# For production (Linux):
+chmod +x install.sh
+sudo ./install.sh  # This will handle everything automatically
+```
+
+### Production Installation (Automated)
+
+The `install.sh` script automatically handles:
+
+1. **System Dependencies**: Python, Node.js, SteamCMD
+2. **User Management**: Creates `zedin` service user
+3. **Directory Setup**: Creates all required directories with proper permissions
+4. **Application Installation**: Installs backend and frontend
+5. **Service Configuration**: Sets up systemd services
+6. **Web Server**: Configures Nginx reverse proxy
+7. **Firewall**: Configures UFW for game server ports
+8. **Security**: Implements non-root service execution
+
+After installation, the application will be available at:
+- **Web Interface**: `http://your-server-ip/`
+- **API Documentation**: `http://your-server-ip/docs`
+
+### Manual Installation (Development)
+```bash
 # Install all dependencies
 npm run install:all
 
@@ -100,6 +180,75 @@ npm run build
 
 # Start production server
 npm start
+```
+
+## Service Management (Production)
+
+### Service Status
+```bash
+# Check all services
+sudo systemctl status zedin-backend
+sudo systemctl status nginx
+
+# View logs
+sudo journalctl -f -u zedin-backend
+sudo journalctl -f -u nginx
+```
+
+### Starting/Stopping Services
+```bash
+# Start services
+sudo systemctl start zedin-backend
+sudo systemctl start nginx
+
+# Stop services  
+sudo systemctl stop zedin-backend
+sudo systemctl stop nginx
+
+# Restart services
+sudo systemctl restart zedin-backend
+sudo systemctl restart nginx
+
+# Enable auto-start on boot
+sudo systemctl enable zedin-backend
+sudo systemctl enable nginx
+```
+
+### Troubleshooting
+
+#### Permission Issues
+```bash
+# Fix ownership if needed
+sudo chown -R zedin:zedin /opt/zedin-steam-manager
+sudo chown -R zedin:zedin /var/lib/zedin
+sudo chown -R zedin:zedin /var/log/zedin
+
+# Check user groups
+groups zedin
+id zedin
+```
+
+#### Service Issues
+```bash
+# Check service logs for errors
+sudo journalctl -u zedin-backend --since "1 hour ago"
+
+# Check port availability
+sudo netstat -tlnp | grep :8000
+sudo netstat -tlnp | grep :80
+
+# Test backend directly
+curl http://localhost:8000/api/health
+```
+
+#### Database Issues
+```bash
+# Check database file permissions
+ls -la /var/lib/zedin/zedin_steam_manager.db
+
+# Reset database (if needed)
+sudo -u zedin rm -f /var/lib/zedin/zedin_steam_manager.db
+sudo systemctl restart zedin-backend
 ```
 
 ## Configuration
