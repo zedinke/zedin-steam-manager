@@ -377,7 +377,11 @@ sudo apt install -y nginx
 log "Building frontend application..."
 cd "$INSTALL_DIR/frontend"
 sudo -u $SERVICE_USER npm install
-sudo -u $SERVICE_USER npm run build
+if sudo -u $SERVICE_USER npm run build; then
+    log "✓ Frontend built successfully"
+else
+    error "Frontend build failed"
+fi
 
 # Create nginx configuration
 log "Creating nginx configuration..."

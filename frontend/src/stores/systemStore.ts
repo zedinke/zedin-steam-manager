@@ -4,6 +4,7 @@ interface SystemState {
   systemInfo: any;
   updateInfo: any;
   servers: any[];
+  updateSystemInfo: (info: any) => void;
   fetchSystemInfo: () => void;
   fetchUpdateInfo: () => void;
   fetchServers: () => void;
@@ -13,6 +14,7 @@ export const useSystemStore = create<SystemState>((set) => ({
   systemInfo: {},
   updateInfo: {},
   servers: [],
+  updateSystemInfo: (info) => set({ systemInfo: info }),
   fetchSystemInfo: () => {
     // Mock data
     set({

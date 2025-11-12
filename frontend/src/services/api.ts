@@ -11,6 +11,13 @@ export const systemApi = {
   getSystemInfo: () => api.get('/system/info'),
   getUpdateInfo: () => api.get('/updates/check'),
   getHealth: () => api.get('/health'),
+  getServers: () => api.get('/servers'),
+  checkUpdates: () => api.get('/updates/check'),
+  startServer: (id: number) => api.post(`/servers/${id}/start`),
+  stopServer: (id: number) => api.post(`/servers/${id}/stop`),
+  installServer: (id: number) => api.post(`/servers/${id}/install`),
+  deleteSharedFiles: (gameType: string) => api.delete(`/shared-files/${gameType}`),
+  updateManager: () => api.post('/updates/install'),
 };
 
 export const serverApi = {
