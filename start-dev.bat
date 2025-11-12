@@ -1,6 +1,9 @@
 @echo off
 echo Starting Zedin Steam Manager Development Environment...
 
+REM Set development environment
+set NODE_ENV=development
+
 REM Refresh PATH environment variables
 set PATH=%PATH%;C:\Program Files\nodejs\;%APPDATA%\npm
 

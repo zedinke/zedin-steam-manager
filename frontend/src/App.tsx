@@ -8,27 +8,55 @@ import Servers from './pages/Servers/Servers';
 import System from './pages/System/System';
 import Settings from './pages/Settings/Settings';
 import Login from './pages/Auth/Login';
-import { useAuthStore } from './stores/authStore';
+import { authStore } from './stores/authStore';
 
-function App() {
-  const { isAuthenticated } = useAuthStore();
-
+// Protected Route Component
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const isAuthenticated = authStore((state) => state.isAuthenticated);
+  
   if (!isAuthenticated) {
-    return <Login />;
+    return <Navigate to="/login" replace />;
   }
-
+  
   return (
     <Box sx={{ display: 'flex', height: '100vh' }}>
       <Layout>
-        <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/servers/*" element={<Servers />} />
-          <Route path="/system" element={<System />} />
-          <Route path="/settings" element={<Settings />} />
-        </Routes>
+        {children}
       </Layout>
     </Box>
+  );
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/" element={
+        <ProtectedRoute>
+          <Navigate to="/dashboard" replace />
+        </ProtectedRoute>
+      } />
+      <Route path="/dashboard" element={
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
+      } />
+      <Route path="/servers/*" element={
+        <ProtectedRoute>
+          <Servers />
+        </ProtectedRoute>
+      } />
+      <Route path="/system" element={
+        <ProtectedRoute>
+          <System />
+        </ProtectedRoute>
+      } />
+      <Route path="/settings" element={
+        <ProtectedRoute>
+          <Settings />
+        </ProtectedRoute>
+      } />
+    </Routes>
   );
 }
 

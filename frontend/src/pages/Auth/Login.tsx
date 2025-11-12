@@ -113,7 +113,7 @@ const Login: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        authStore.login(data.access_token, data.user);
+        authStore.getState().login(data.access_token, data.user);
         navigate('/dashboard');
       } else {
         const errorData = await response.json();

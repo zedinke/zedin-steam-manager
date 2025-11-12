@@ -1,7 +1,6 @@
-import { app, BrowserWindow, Menu, ipcMain, dialog } from 'electron';
+import { app, BrowserWindow, Menu, ipcMain, dialog, net } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import * as path from 'path';
-import fetch from 'node-fetch';
 
 class ZedinSteamManager {
   private mainWindow: BrowserWindow | null = null;
@@ -142,23 +141,44 @@ class ZedinSteamManager {
 
   private async checkForUpdates(): Promise<void> {
     try {
-      const response = await fetch('https://api.github.com/repos/zedin/steam-manager/releases/latest');
-      const data: any = await response.json();
-      const latestVersion = data.tag_name?.replace('v', '');
+      const request = net.request('https://api.github.com/repos/zedin/steam-manager/releases/latest');
       
-      if (latestVersion && latestVersion !== this.currentVersion) {
-        const result = await dialog.showMessageBox(this.mainWindow!, {
-          type: 'question',
-          title: 'Update Available',
-          message: `A new version (${latestVersion}) is available. Current version: ${this.currentVersion}`,
-          buttons: ['Update Now', 'Later'],
-          defaultId: 0
+      request.on('response', (response) => {
+        let body = '';
+        
+        response.on('data', (chunk) => {
+          body += chunk;
         });
-
-        if (result.response === 0) {
-          autoUpdater.checkForUpdatesAndNotify();
-        }
-      }
+        
+        response.on('end', () => {
+          try {
+            const data = JSON.parse(body);
+            const latestVersion = data.tag_name?.replace('v', '');
+            
+            if (latestVersion && latestVersion !== this.currentVersion) {
+              dialog.showMessageBox(this.mainWindow!, {
+                type: 'question',
+                title: 'Update Available',
+                message: `A new version (${latestVersion}) is available. Current version: ${this.currentVersion}`,
+                buttons: ['Update Now', 'Later'],
+                defaultId: 0
+              }).then((result) => {
+                if (result.response === 0) {
+                  autoUpdater.checkForUpdatesAndNotify();
+                }
+              });
+            }
+          } catch (parseError) {
+            console.log('Failed to parse update response:', parseError);
+          }
+        });
+      });
+      
+      request.on('error', (error) => {
+        console.log('Update check failed:', error);
+      });
+      
+      request.end();
     } catch (error) {
       console.log('Update check failed:', error);
     }

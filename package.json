@@ -1,6 +1,6 @@
 {
   "name": "zedin-steam-manager",
-  "version": "0.000001",
+  "version": "0.0.1",
   "description": "Professional Steam Server Manager for ASE and ASA",
   "main": "dist/electron/main.js",
   "homepage": "./",
@@ -42,8 +42,7 @@
     "wait-on": "^7.0.0"
   },
   "dependencies": {
-    "electron-updater": "^6.1.0",
-    "node-fetch": "^3.3.0"
+    "electron-updater": "^6.1.0"
   },
   "build": {
     "appId": "com.zedin.steammanager",
