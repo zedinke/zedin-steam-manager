@@ -214,6 +214,9 @@ sudo apt install -y lib32gcc-s1 libc6:i386 libncurses5:i386 libstdc++6:i386
 # Install SteamCMD with better error handling
 log "Installing SteamCMD..."
 sudo mkdir -p $STEAMCMD_DIR
+
+# Save current directory before changing to /tmp
+ORIGINAL_DIR=$(pwd)
 cd /tmp
 sudo rm -f steamcmd.tar.gz* 2>/dev/null || true
 
@@ -225,6 +228,9 @@ if wget -q -O steamcmd.tar.gz https://steamcdn-a.akamaihd.net/client/installer/s
 else
     warning "SteamCMD download failed - continuing without it (can be installed manually later)"
 fi
+
+# Return to original directory
+cd "$ORIGINAL_DIR"
 
 # Install Nginx
 log "Installing Nginx..."
