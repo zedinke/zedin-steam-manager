@@ -364,10 +364,103 @@ sudo chown root:$SERVICE_USER /etc/zedin/zsmanager.env
 sudo chmod 640 /etc/zedin/zsmanager.env
 
 # ============================================================================
-# PHASE 5: Services
+# PHASE 5: Frontend Build & Web Server
 # ============================================================================
 
-log "PHASE 5: Setting up systemd services..."
+log "PHASE 5: Building frontend and configuring web server..."
+
+# Install nginx
+log "Installing nginx..."
+sudo apt install -y nginx
+
+# Build frontend
+log "Building frontend application..."
+cd "$INSTALL_DIR/frontend"
+sudo -u $SERVICE_USER npm install
+sudo -u $SERVICE_USER npm run build
+
+# Create nginx configuration
+log "Creating nginx configuration..."
+sudo tee /etc/nginx/sites-available/zsmanager > /dev/null << 'EOF'
+server {
+    listen 80;
+    server_name _;
+    root /opt/zedin-steam-manager/frontend/dist;
+    index index.html;
+
+    # Frontend static files
+    location / {
+        try_files $uri $uri/ /index.html;
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+        add_header Pragma "no-cache";
+        add_header Expires "0";
+    }
+
+    # API proxy
+    location /api/ {
+        proxy_pass http://127.0.0.1:8000/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 300s;
+        proxy_connect_timeout 75s;
+    }
+
+    # Health check
+    location /health {
+        proxy_pass http://127.0.0.1:8000/health;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # API docs
+    location /docs {
+        proxy_pass http://127.0.0.1:8000/docs;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+    add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
+
+    # Gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_proxied expired no-cache no-store private no_last_modified no_etag auth;
+    gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss application/javascript;
+}
+EOF
+
+# Remove default nginx site
+sudo rm -f /etc/nginx/sites-enabled/default
+
+# Enable zsmanager site
+sudo ln -sf /etc/nginx/sites-available/zsmanager /etc/nginx/sites-enabled/
+
+# Test nginx configuration
+sudo nginx -t
+
+# ============================================================================
+# PHASE 6: Services
+# ============================================================================
+
+log "PHASE 6: Setting up systemd services..."
 
 # Backend service
 sudo tee /etc/systemd/system/zsmanager-backend.service > /dev/null << EOF
@@ -586,8 +679,15 @@ fi
 echo ""
 echo "============================================================================"
 
+# ============================================================================
+# PHASE 7: Firewall & SteamCMD
+# ============================================================================
+
+log "PHASE 7: Configuring firewall and installing SteamCMD..."
+
 # Install SteamCMD
 log "Installing SteamCMD..."
+ORIGINAL_DIR=$(pwd)
 sudo mkdir -p $STEAMCMD_DIR
 cd /tmp
 sudo rm -f steamcmd.tar.gz*  # Remove any existing files
@@ -598,6 +698,37 @@ if [ -f steamcmd.tar.gz ]; then
     sudo chown -R root:root $STEAMCMD_DIR
     sudo chmod +x $STEAMCMD_DIR/steamcmd.sh
     log "SteamCMD installed successfully"
+else
+    error "Failed to download SteamCMD"
+fi
+cd "$ORIGINAL_DIR"
+
+# Configure UFW firewall
+log "Configuring firewall..."
+sudo ufw --force reset
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow ssh
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw allow 7777:7877/tcp
+sudo ufw allow 7777:7877/udp
+sudo ufw --force enable
+
+# ============================================================================
+# PHASE 8: Service Startup & Testing
+# ============================================================================
+
+log "PHASE 8: Starting services..."
+
+# Start services
+sudo systemctl daemon-reload
+sudo systemctl enable zsmanager-backend nginx
+sudo systemctl start zsmanager-backend
+sudo systemctl restart nginx
+
+# Wait for services to start
+sleep 5
 else
     warning "SteamCMD download failed, but continuing installation..."
 fi
@@ -699,8 +830,8 @@ SSH_TIMEOUT=30
 RCON_TIMEOUT=10
 EOF
 
-sudo chown root:$SERVICE_USER /etc/zedin/zedin.env
-sudo chmod 640 /etc/zedin/zedin.env
+sudo chown root:$SERVICE_USER /etc/zedin/zsmanager.env
+sudo chmod 640 /etc/zedin/zsmanager.env
 
 # ============================================================================
 # PHASE 5: Services
