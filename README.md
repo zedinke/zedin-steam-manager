@@ -82,19 +82,19 @@ Zedin Steam Manager/
 Before installing, create the proper user and group for the Steam Manager:
 
 ```bash
-# 1. Create zedin group
-sudo groupadd zedin
+# 1. Create zsmanager group
+sudo groupadd zsmanager
 
-# 2. Create zedin user (system user for service)
-sudo useradd -r -m -g zedin -s /bin/bash zedin
+# 2. Create zsmanager user (system user for service)
+sudo useradd -r -m -g zsmanager -s /bin/bash zsmanager
 
-# 3. Add zedin user to sudo group (for system operations)
-sudo usermod -aG sudo zedin
+# 3. Add zsmanager user to sudo group (for system operations)
+sudo usermod -aG sudo zsmanager
 
-# 4. Create your personal user (if not exists) and add to zedin group
-sudo useradd -m -g users -G zedin -s /bin/bash yourusername
-# OR add existing user to zedin group:
-sudo usermod -aG zedin yourusername
+# 4. Create your personal user (if not exists) and add to zsmanager group
+sudo useradd -m -g users -G zsmanager -s /bin/bash yourusername
+# OR add existing user to zsmanager group:
+sudo usermod -aG zsmanager yourusername
 
 # 5. Set up directory permissions
 sudo mkdir -p /opt/zedin-steam-manager
@@ -103,9 +103,9 @@ sudo mkdir -p /var/log/zedin
 sudo mkdir -p /etc/zedin
 
 # 6. Set proper ownership
-sudo chown -R zedin:zedin /opt/zedin-steam-manager
-sudo chown -R zedin:zedin /var/lib/zedin
-sudo chown -R zedin:zedin /var/log/zedin
+sudo chown -R zsmanager:zsmanager /opt/zedin-steam-manager
+sudo chown -R zsmanager:zsmanager /var/lib/zedin
+sudo chown -R zsmanager:zsmanager /var/log/zedin
 
 # 7. Set directory permissions
 sudo chmod 755 /opt/zedin-steam-manager
@@ -123,7 +123,7 @@ su - yourusername  # Replace with your username
 
 The installer must be run as a regular user with sudo privileges because:
 - Root user is blocked for security reasons
-- Services run under dedicated `zedin` user
+- Services run under dedicated `zsmanager` user
 - Proper file permissions are automatically set
 - Security policies prevent root service execution
 
@@ -147,7 +147,7 @@ sudo ./install.sh  # This will handle everything automatically
 The `install.sh` script automatically handles:
 
 1. **System Dependencies**: Python, Node.js, SteamCMD
-2. **User Management**: Creates `zedin` service user
+2. **User Management**: Creates `zsmanager` service user
 3. **Directory Setup**: Creates all required directories with proper permissions
 4. **Application Installation**: Installs backend and frontend
 5. **Service Configuration**: Sets up systemd services
@@ -187,30 +187,30 @@ npm start
 ### Service Status
 ```bash
 # Check all services
-sudo systemctl status zedin-backend
+sudo systemctl status zsmanager-backend
 sudo systemctl status nginx
 
 # View logs
-sudo journalctl -f -u zedin-backend
+sudo journalctl -f -u zsmanager-backend
 sudo journalctl -f -u nginx
 ```
 
 ### Starting/Stopping Services
 ```bash
 # Start services
-sudo systemctl start zedin-backend
+sudo systemctl start zsmanager-backend
 sudo systemctl start nginx
 
 # Stop services  
-sudo systemctl stop zedin-backend
+sudo systemctl stop zsmanager-backend
 sudo systemctl stop nginx
 
 # Restart services
-sudo systemctl restart zedin-backend
+sudo systemctl restart zsmanager-backend
 sudo systemctl restart nginx
 
 # Enable auto-start on boot
-sudo systemctl enable zedin-backend
+sudo systemctl enable zsmanager-backend
 sudo systemctl enable nginx
 ```
 
@@ -219,19 +219,19 @@ sudo systemctl enable nginx
 #### Permission Issues
 ```bash
 # Fix ownership if needed
-sudo chown -R zedin:zedin /opt/zedin-steam-manager
-sudo chown -R zedin:zedin /var/lib/zedin
-sudo chown -R zedin:zedin /var/log/zedin
+sudo chown -R zsmanager:zsmanager /opt/zedin-steam-manager
+sudo chown -R zsmanager:zsmanager /var/lib/zedin
+sudo chown -R zsmanager:zsmanager /var/log/zedin
 
 # Check user groups
-groups zedin
-id zedin
+groups zsmanager
+id zsmanager
 ```
 
 #### Service Issues
 ```bash
 # Check service logs for errors
-sudo journalctl -u zedin-backend --since "1 hour ago"
+sudo journalctl -u zsmanager-backend --since "1 hour ago"
 
 # Check port availability
 sudo netstat -tlnp | grep :8000
@@ -247,8 +247,8 @@ curl http://localhost:8000/api/health
 ls -la /var/lib/zedin/zedin_steam_manager.db
 
 # Reset database (if needed)
-sudo -u zedin rm -f /var/lib/zedin/zedin_steam_manager.db
-sudo systemctl restart zedin-backend
+sudo -u zsmanager rm -f /var/lib/zedin/zedin_steam_manager.db
+sudo systemctl restart zsmanager-backend
 ```
 
 ## Configuration

@@ -44,7 +44,7 @@ fi
 
 # Variables
 INSTALL_DIR="/opt/zedin-steam-manager"
-SERVICE_USER="zedin"
+SERVICE_USER="zsmanager"
 LOG_DIR="/var/log/zedin"
 DATA_DIR="/var/lib/zedin"
 STEAMCMD_DIR="/opt/steamcmd"
@@ -180,7 +180,7 @@ EOF
 log "PHASE 4: Creating configuration..."
 
 # Environment file
-sudo tee /etc/zedin/zedin.env > /dev/null << EOF
+sudo tee /etc/zedin/zsmanager.env > /dev/null << EOF
 APP_NAME=Zedin Steam Manager
 VERSION=0.000001
 DEBUG=False
@@ -214,7 +214,7 @@ sudo chmod 640 /etc/zedin/zedin.env
 log "PHASE 5: Setting up services..."
 
 # Backend service
-sudo tee /etc/systemd/system/zedin-backend.service > /dev/null << EOF
+sudo tee /etc/systemd/system/zsmanager-backend.service > /dev/null << EOF
 [Unit]
 Description=Zedin Steam Manager Backend
 After=network.target
@@ -225,7 +225,7 @@ User=$SERVICE_USER
 Group=$SERVICE_USER
 WorkingDirectory=$INSTALL_DIR/backend
 Environment=PATH=$INSTALL_DIR/venv/bin
-EnvironmentFile=/etc/zedin/zedin.env
+EnvironmentFile=/etc/zedin/zsmanager.env
 ExecStart=$INSTALL_DIR/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
 Restart=always
 RestartSec=3
@@ -302,14 +302,14 @@ print('Database initialized')
 EOF
 
 sudo systemctl daemon-reload
-sudo systemctl enable zedin-backend
-sudo systemctl start zedin-backend
+sudo systemctl enable zsmanager-backend
+sudo systemctl start zsmanager-backend
 sudo systemctl restart nginx
 
 # Wait and check
 sleep 5
 
-if sudo systemctl is-active --quiet zedin-backend; then
+if sudo systemctl is-active --quiet zsmanager-backend; then
     log "✓ Backend service started"
 else
     error "✗ Backend service failed to start"
@@ -337,10 +337,10 @@ echo "   Web: http://$(hostname -I | awk '{print $1}')"
 echo "   API: http://$(hostname -I | awk '{print $1}')/docs"
 echo ""
 echo "🔧 Management:"
-echo "   Status: sudo systemctl status zedin-backend"
-echo "   Logs: sudo journalctl -f -u zedin-backend"
-echo "   Stop: sudo systemctl stop zedin-backend"
-echo "   Start: sudo systemctl start zedin-backend"
+echo "   Status: sudo systemctl status zsmanager-backend"
+echo "   Logs: sudo journalctl -f -u zsmanager-backend"
+echo "   Stop: sudo systemctl stop zsmanager-backend"
+echo "   Start: sudo systemctl start zsmanager-backend"
 echo ""
 echo "📂 Paths:"
 echo "   App: $INSTALL_DIR"
