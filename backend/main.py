@@ -47,7 +47,7 @@ app.add_middleware(LanguageMiddleware)
 security = HTTPBearer()
 
 # API Routes
-app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
+app.include_router(auth.router, tags=["Authentication"])
 app.include_router(servers.router, prefix="/api/servers", tags=["Server Management"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
 app.include_router(system.router, prefix="/api/system", tags=["System"])

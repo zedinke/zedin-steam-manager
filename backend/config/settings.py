@@ -46,5 +46,17 @@ class Settings(BaseSettings):
     # RCON
     RCON_TIMEOUT: int = 10
     
+    # Frontend URL
+    FRONTEND_URL: str = "http://142.132.194.186"
+    
+    # Email Configuration (Gmail SMTP)
+    EMAIL_SENDER: str = "noreply@zedinsteammanager.com"
+    EMAIL_PASSWORD: str = "your_app_password_here"  # Gmail App Password
+    EMAIL_ENABLED: bool = False  # Set to True when email is configured
+    
+    # External Database (PlanetScale/Supabase/Neon)
+    EXTERNAL_DATABASE_URL: str = ""  # Set this for external database
+    USE_EXTERNAL_DB: bool = False
+    
     class Config:
         env_file = ".env"
