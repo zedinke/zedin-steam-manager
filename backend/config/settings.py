@@ -60,3 +60,6 @@ class Settings(BaseSettings):
     
     class Config:
         env_file = ".env"
+
+# Create settings instance
+settings = Settings()
