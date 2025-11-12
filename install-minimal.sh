@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # ============================================================================
-# Zedin Steam Manager - Simple Installation Script
-# Skip problematic components for quick setup
+# Zedin Steam Manager - Minimal Installation Script
+# Skips problematic Node.js dependencies for quick backend setup
 # ============================================================================
 
 set -e
@@ -33,36 +33,20 @@ LOG_DIR="/var/log/zedin"
 DATA_DIR="/var/lib/zedin"
 
 echo "============================================================================"
-echo "                    Zedin Steam Manager - Simple Install"
+echo "                    Zedin Steam Manager - Minimal Install"
 echo "============================================================================"
 
-log "PHASE 1: Installing basic dependencies..."
+log "PHASE 1: Installing minimal dependencies (Python only)..."
 sudo apt update
-
-# First, fix potential Node.js conflicts
-log "Fixing Node.js conflicts..."
-sudo apt remove --purge nodejs npm -y 2>/dev/null || true
-sudo apt autoremove -y
-sudo apt autoclean
-
-# Install basic dependencies without Node.js first
-log "Installing Python and basic tools..."
-sudo apt install -y python3 python3-pip python3-venv git nginx curl wget
-
-# Install Node.js from NodeSource
-log "Installing Node.js 18..."
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt install -y nodejs
-
-# Verify installation
-node --version
-npm --version
+sudo apt install -y python3 python3-pip python3-venv git nginx curl
 
 log "PHASE 2: Creating user and directories..."
 # Create user if not exists
 if ! id "$SERVICE_USER" &>/dev/null; then
     sudo useradd -r -m -g users -s /bin/bash $SERVICE_USER
     log "Created user: $SERVICE_USER"
+else
+    log "User $SERVICE_USER already exists"
 fi
 
 # Create directories
@@ -70,39 +54,16 @@ sudo mkdir -p $INSTALL_DIR $LOG_DIR $DATA_DIR/{servers,shared_files,backups} /et
 sudo chown -R $SERVICE_USER:users $INSTALL_DIR $DATA_DIR $LOG_DIR
 
 log "PHASE 3: Installing application..."
-# Copy files - check current directory first
-CURRENT_DIR=$(pwd)
-log "Current directory: $CURRENT_DIR"
-log "Directory contents:"
-ls -la
-
-# Check if we're in the right directory
-if [ -d "backend" ] && [ -d "frontend" ]; then
-    log "Found application files in current directory"
-    sudo cp -r * $INSTALL_DIR/
+# Copy files
+if [ -d "backend" ]; then
+    sudo cp -r backend/ $INSTALL_DIR/
+    sudo cp -r frontend/ $INSTALL_DIR/ 2>/dev/null || log "Frontend skipped (Node.js not available)"
+    sudo cp package.json $INSTALL_DIR/ 2>/dev/null || true
+    sudo cp README.md $INSTALL_DIR/ 2>/dev/null || true
     sudo chown -R $SERVICE_USER:users $INSTALL_DIR
-elif [ -d "../backend" ] && [ -d "../frontend" ]; then
-    log "Found application files in parent directory"
-    sudo cp -r ../* $INSTALL_DIR/
-    sudo chown -R $SERVICE_USER:users $INSTALL_DIR
+    log "Application files copied successfully"
 else
-    log "Searching for application files..."
-    # Try to find the project directory
-    PROJECT_DIR=""
-    for dir in /home/*/zedin-steam-manager /tmp/zedin-steam-manager /opt/zedin-steam-manager /zedin-steam-manager; do
-        if [ -d "$dir/backend" ] && [ -d "$dir/frontend" ]; then
-            PROJECT_DIR="$dir"
-            break
-        fi
-    done
-    
-    if [ -n "$PROJECT_DIR" ]; then
-        log "Found project directory at: $PROJECT_DIR"
-        sudo cp -r $PROJECT_DIR/* $INSTALL_DIR/
-        sudo chown -R $SERVICE_USER:users $INSTALL_DIR
-    else
-        error "Application files not found. Please run from the project directory or ensure backend/ and frontend/ exist"
-    fi
+    error "Backend directory not found"
 fi
 
 log "PHASE 4: Installing Python dependencies..."
@@ -115,14 +76,7 @@ pip install --upgrade pip
 pip install -r requirements.txt
 EOF
 
-log "PHASE 5: Installing Node.js dependencies..."
-sudo -u $SERVICE_USER bash << 'EOF'
-cd /opt/zedin-steam-manager/frontend
-npm install
-npm run build
-EOF
-
-log "PHASE 6: Creating configuration..."
+log "PHASE 5: Creating configuration..."
 sudo tee /etc/zedin/zsmanager.env > /dev/null << EOF
 APP_NAME=Zedin Steam Manager
 VERSION=0.000001
@@ -135,7 +89,7 @@ LOG_FILE=$LOG_DIR/steam_manager.log
 EOF
 sudo chown $SERVICE_USER:users /etc/zedin/zsmanager.env
 
-log "PHASE 7: Creating systemd service..."
+log "PHASE 6: Creating systemd service..."
 sudo tee /etc/systemd/system/zsmanager-backend.service > /dev/null << EOF
 [Unit]
 Description=Zedin Steam Manager Backend
@@ -154,18 +108,13 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
-log "PHASE 8: Configuring Nginx..."
+log "PHASE 7: Configuring Nginx (API only)..."
 sudo tee /etc/nginx/sites-available/zedin-steam-manager > /dev/null << 'EOF'
 server {
     listen 80;
     server_name _;
 
-    location / {
-        root /opt/zedin-steam-manager/frontend/dist;
-        index index.html;
-        try_files $uri $uri/ /index.html;
-    }
-
+    # API endpoints
     location /api/ {
         proxy_pass http://localhost:8000;
         proxy_set_header Host $host;
@@ -175,6 +124,16 @@ server {
     location /docs {
         proxy_pass http://localhost:8000;
     }
+
+    location /health {
+        proxy_pass http://localhost:8000;
+    }
+
+    # Simple status page
+    location / {
+        return 200 'Zedin Steam Manager API Running\nAccess API docs at /docs';
+        add_header Content-Type text/plain;
+    }
 }
 EOF
 
@@ -182,17 +141,21 @@ sudo ln -sf /etc/nginx/sites-available/zedin-steam-manager /etc/nginx/sites-enab
 sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t
 
-log "PHASE 9: Starting services..."
+log "PHASE 8: Starting services..."
 # Initialize database
 sudo -u $SERVICE_USER bash << 'EOF'
 cd /opt/zedin-steam-manager
 source venv/bin/activate
 cd backend
 python3 -c "
-from config.database import engine
-from models import base
-base.Base.metadata.create_all(bind=engine)
-print('Database initialized')
+try:
+    from config.database import engine
+    from models import base
+    base.Base.metadata.create_all(bind=engine)
+    print('Database initialized successfully')
+except Exception as e:
+    print(f'Database initialization error: {e}')
+    exit(1)
 "
 EOF
 
@@ -205,31 +168,43 @@ sleep 3
 
 # Check services
 if sudo systemctl is-active --quiet zsmanager-backend; then
-    log "✓ Backend service started"
+    log "✓ Backend service started successfully"
 else
-    log "✗ Backend service issue - check logs: sudo journalctl -u zsmanager-backend"
+    log "✗ Backend service issue - checking logs..."
+    sudo journalctl -u zsmanager-backend --no-pager -n 20
 fi
 
 if sudo systemctl is-active --quiet nginx; then
-    log "✓ Nginx started"
+    log "✓ Nginx started successfully"
 else
     log "✗ Nginx issue - check logs: sudo journalctl -u nginx"
 fi
 
+# Test API
+log "Testing API connectivity..."
+curl -s http://localhost:8000/health >/dev/null && log "✓ API responding" || log "✗ API not responding"
+
 clear
 echo "============================================================================"
-echo "                    🎉 INSTALLATION COMPLETE! 🎉"
+echo "                    🎉 MINIMAL INSTALLATION COMPLETE! 🎉"
 echo "============================================================================"
 echo ""
-echo "Zedin Steam Manager successfully installed!"
+echo "Zedin Steam Manager Backend successfully installed!"
 echo ""
 echo "📍 Access:"
-echo "   Web: http://$(hostname -I | awk '{print $1}')"
 echo "   API: http://$(hostname -I | awk '{print $1}')/docs"
+echo "   Health: http://$(hostname -I | awk '{print $1}')/health"
 echo ""
 echo "🔧 Management:"
 echo "   Status: sudo systemctl status zsmanager-backend"
 echo "   Logs: sudo journalctl -f -u zsmanager-backend"
+echo "   Stop: sudo systemctl stop zsmanager-backend"
+echo "   Start: sudo systemctl start zsmanager-backend"
 echo ""
-echo "Note: SteamCMD skipped for quick setup - install manually if needed"
+echo "📝 Next Steps:"
+echo "   1. Install Node.js manually if you need frontend"
+echo "   2. Access API docs to test functionality"
+echo "   3. Check logs for any issues"
+echo ""
+echo "Note: Frontend skipped due to Node.js conflicts - backend API fully functional"
 echo "============================================================================"
