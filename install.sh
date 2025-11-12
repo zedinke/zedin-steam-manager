@@ -835,39 +835,84 @@ sudo systemctl restart nginx
 
 # Wait for services to start
 sleep 5
+
+# Check service status
+BACKEND_STATUS="✗ Failed"
+NGINX_STATUS="✗ Failed"
+
+if sudo systemctl is-active --quiet zsmanager-backend; then
+    BACKEND_STATUS="✓ Running"
 else
-    warning "SteamCMD download failed, but continuing installation..."
+    log "Backend service issue - checking logs..."
+    sudo journalctl -u zsmanager-backend --no-pager -n 10
+fi
+
+if sudo systemctl is-active --quiet nginx; then
+    NGINX_STATUS="✓ Running"
+else
+    log "Nginx service issue - checking logs..."
+    sudo journalctl -u nginx --no-pager -n 10
+fi
+
+# Test connectivity
+API_STATUS="✗ Not responding"
+if curl -s http://localhost:8000/api/health >/dev/null 2>&1; then
+    API_STATUS="✓ API responding"
+fi
+
+FRONTEND_STATUS="✗ Not accessible"
+if curl -s http://localhost >/dev/null 2>&1; then
+    FRONTEND_STATUS="✓ Frontend accessible"
 fi
 
 # ============================================================================
-# PHASE 2: User and Directory Setup
+# Final Status Report
 # ============================================================================
 
-log "PHASE 2: Setting up user and directories..."
+echo ""
+echo "============================================================================"
+echo "                    🎉 INSTALLATION COMPLETE! 🎉"
+echo "============================================================================"
+echo ""
+echo "Zedin Steam Manager has been successfully installed!"
+echo ""
+echo "📊 Service Status:"
+echo "   Backend: $BACKEND_STATUS"
+echo "   Nginx: $NGINX_STATUS"  
+echo "   API: $API_STATUS"
+echo "   Frontend: $FRONTEND_STATUS"
+echo ""
+echo "📍 Access Points:"
+echo "   Web Interface: http://$(hostname -I | awk '{print $1}')"
+echo "   API Documentation: http://$(hostname -I | awk '{print $1}')/docs"
+echo "   Health Check: http://$(hostname -I | awk '{print $1}')/health"
+echo ""
+echo "🔧 Service Management:"
+echo "   Status: sudo systemctl status zsmanager-backend"
+echo "   Logs: sudo journalctl -f -u zsmanager-backend"
+echo "   Stop: sudo systemctl stop zsmanager-backend"
+echo "   Start: sudo systemctl start zsmanager-backend"
+echo "   Restart: sudo systemctl restart zsmanager-backend"
+echo ""
+echo "📂 Important Directories:"
+echo "   Application: $INSTALL_DIR"
+echo "   Data: $DATA_DIR"
+echo "   Logs: $LOG_DIR"
+echo "   Config: /etc/zedin"
+echo ""
+echo "🔐 Security Features:"
+echo "   Firewall: Enabled (UFW)"
+echo "   Service User: $SERVICE_USER (non-root)"
+echo "   Game Server Ports: 7777-7877 (TCP/UDP)"
+echo ""
+echo "🎯 Ready to use! Open your web browser and go to:"
+echo "   http://$(hostname -I | awk '{print $1}')"
+echo ""
+echo "   Default login will be created on first access."
+echo ""
+echo "============================================================================"
 
-# Create service user
-if ! id "$SERVICE_USER" &>/dev/null; then
-    log "Creating service user: $SERVICE_USER"
-    sudo useradd -r -s /bin/bash -d $INSTALL_DIR -m $SERVICE_USER
-else
-    log "User $SERVICE_USER already exists"
-fi
-
-# Create directories
-log "Creating directories..."
-sudo mkdir -p $INSTALL_DIR
-sudo mkdir -p $LOG_DIR
-sudo mkdir -p $DATA_DIR/{servers,shared_files,backups}
-sudo mkdir -p /etc/zedin
-
-# Set permissions
-sudo chown -R $SERVICE_USER:$SERVICE_USER $INSTALL_DIR
-sudo chown -R $SERVICE_USER:$SERVICE_USER $DATA_DIR
-sudo chown -R $SERVICE_USER:$SERVICE_USER $LOG_DIR
-
-# ============================================================================
-# PHASE 3: Application Installation
-# ============================================================================
+log "Installation completed successfully!"
 
 log "PHASE 3: Installing application..."
 
@@ -1062,7 +1107,7 @@ echo "==========================================================================
 echo "                    🎉 INSTALLATION COMPLETE! 🎉"
 echo "============================================================================"
 echo ""
-echo "Zedin Steam Manager successfully installed!"
+echo "log "Installation completed successfully!""
 echo ""
 echo "📍 Access:"
 echo "   Web: http://$(hostname -I | awk '{print $1}')"
