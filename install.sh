@@ -102,10 +102,17 @@ sudo apt install -y lib32gcc-s1 libc6:i386 libncurses5:i386 libstdc++6:i386
 log "Installing SteamCMD..."
 sudo mkdir -p $STEAMCMD_DIR
 cd /tmp
-wget -O steamcmd.tar.gz https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz
-sudo tar -xzf steamcmd.tar.gz -C $STEAMCMD_DIR
-sudo chown -R root:root $STEAMCMD_DIR
-sudo chmod +x $STEAMCMD_DIR/steamcmd.sh
+sudo rm -f steamcmd.tar.gz*  # Remove any existing files
+wget -q -O steamcmd.tar.gz https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz || \
+    wget -q -O steamcmd.tar.gz http://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz
+if [ -f steamcmd.tar.gz ]; then
+    sudo tar -xzf steamcmd.tar.gz -C $STEAMCMD_DIR
+    sudo chown -R root:root $STEAMCMD_DIR
+    sudo chmod +x $STEAMCMD_DIR/steamcmd.sh
+    log "SteamCMD installed successfully"
+else
+    warning "SteamCMD download failed, but continuing installation..."
+fi
 
 # ============================================================================
 # PHASE 2: User and Directory Setup
