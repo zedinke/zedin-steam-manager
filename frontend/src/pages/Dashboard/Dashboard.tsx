@@ -33,7 +33,7 @@ import { systemApi } from '../../services/api';
 import { useSystemStore } from '../../stores/systemStore';
 import SystemResourceCard from '../../components/System/SystemResourceCard';
 import ServerCard from '../../components/Server/ServerCard';
-// import LogViewer from '../../components/Logs/LogViewer';
+import LogViewer from '../../components/Logs/LogViewer';
 
 interface DashboardProps {}
 
@@ -242,17 +242,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
         </DialogTitle>
         <DialogContent>
           {selectedServerId && (
-            <Card sx={{ p: 2, backgroundColor: '#1e1e1e', color: '#ffffff' }}>
-              <Typography variant="h6" gutterBottom>
-                Server {selectedServerId} Logs
-              </Typography>
-              <Typography component="pre" sx={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
-{`[2025-11-12 23:12:57] Server ${selectedServerId} starting...
-[2025-11-12 23:12:58] Loading configuration...
-[2025-11-12 23:12:59] Server started successfully
-[2025-11-12 23:13:00] Listening for connections...`}
-              </Typography>
-            </Card>
+            <LogViewer />
           )}
         </DialogContent>
         <DialogActions>
