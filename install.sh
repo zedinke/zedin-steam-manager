@@ -419,8 +419,8 @@ fi
 log "Creating nginx configuration..."
 sudo tee /etc/nginx/sites-available/zsmanager > /dev/null << 'EOF'
 server {
-    listen 80;
-    server_name _;
+    listen 80 default_server;
+    server_name zedin-steam-manager localhost;
     root /opt/zedin-steam-manager/frontend/dist;
     index index.html;
 
@@ -483,14 +483,21 @@ server {
 }
 EOF
 
-# Remove default nginx site
+# Remove default nginx configurations immediately
+log "Removing default nginx configurations..."
 sudo rm -f /etc/nginx/sites-enabled/default
+sudo rm -f /etc/nginx/sites-available/default
+sudo rm -f /etc/nginx/conf.d/default.conf
 
 # Enable zsmanager site
 sudo ln -sf /etc/nginx/sites-available/zsmanager /etc/nginx/sites-enabled/
 
 # Test nginx configuration
-sudo nginx -t
+log "Testing nginx configuration..."
+if ! sudo nginx -t; then
+    warning "Initial nginx test failed, checking for conflicts..."
+    sudo nginx -T 2>&1 | grep -E "(conflicting|error|warn)" || true
+fi
 
 # ============================================================================
 # PHASE 6: Services
@@ -642,9 +649,34 @@ fi
 # Configure and start nginx
 log "Configuring and starting nginx..."
 
+# Remove any conflicting nginx configurations
+log "Cleaning up nginx configurations..."
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo rm -f /etc/nginx/sites-available/default
+sudo rm -f /etc/nginx/conf.d/default.conf
+
+# Ensure our configuration is properly linked
+sudo ln -sf /etc/nginx/sites-available/zsmanager /etc/nginx/sites-enabled/
+
+# Check for any remaining configuration conflicts
+log "Checking for configuration conflicts..."
+if sudo nginx -T 2>&1 | grep -q "conflicting server name"; then
+    warning "Found conflicting server names, attempting to resolve..."
+    
+    # List all enabled sites
+    log "Currently enabled nginx sites:"
+    ls -la /etc/nginx/sites-enabled/ || true
+    
+    # Remove all other enabled sites temporarily
+    sudo find /etc/nginx/sites-enabled/ -type l -not -name "zsmanager" -delete
+    log "Removed conflicting site configurations"
+fi
+
 # Test nginx configuration first
 if ! sudo nginx -t; then
     error "Nginx configuration test failed"
+    log "Nginx configuration details:"
+    sudo nginx -T 2>&1 | head -50 || true
     exit 1
 fi
 
