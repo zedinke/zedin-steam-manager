@@ -232,9 +232,24 @@ fi
 # Return to original directory
 cd "$ORIGINAL_DIR"
 
-# Install Nginx
+# Install and configure Nginx
 log "Installing Nginx..."
 sudo apt install -y nginx
+
+# Check if nginx is already running and handle conflicts
+if sudo systemctl is-active --quiet nginx; then
+    log "Nginx is already running - stopping it temporarily for configuration"
+    sudo systemctl stop nginx
+    NGINX_WAS_RUNNING=true
+else
+    NGINX_WAS_RUNNING=false
+fi
+
+# Check for port 80 conflicts
+if sudo netstat -tlnp | grep -q ":80 "; then
+    warning "Port 80 is in use. Checking what's using it..."
+    sudo netstat -tlnp | grep ":80 " || true
+fi
 
 # ============================================================================
 # PHASE 2: User and Directory Setup
@@ -368,6 +383,23 @@ sudo chmod 640 /etc/zedin/zsmanager.env
 # ============================================================================
 
 log "PHASE 5: Building frontend and configuring web server..."
+
+# Check for port conflicts before configuring nginx
+log "Checking for port conflicts..."
+if sudo netstat -tlnp | grep -q ":80 "; then
+    warning "Port 80 is already in use:"
+    sudo netstat -tlnp | grep ":80 " || true
+    
+    # Check if it's nginx
+    if sudo netstat -tlnp | grep ":80 " | grep -q "nginx"; then
+        log "Port 80 is used by nginx - will reconfigure existing installation"
+    else
+        warning "Port 80 is used by another service. You may need to:"
+        warning "1. Stop the conflicting service, or"
+        warning "2. Configure nginx to use a different port"
+        warning "Continuing with installation..."
+    fi
+fi
 
 # Install nginx
 log "Installing nginx..."
@@ -596,8 +628,46 @@ EOF
 
 sudo systemctl daemon-reload
 sudo systemctl enable zsmanager-backend
-sudo systemctl start zsmanager-backend
-sudo systemctl restart nginx
+
+# Start backend service
+log "Starting backend service..."
+if sudo systemctl start zsmanager-backend; then
+    log "✓ Backend service started"
+else
+    error "Failed to start backend service"
+    sudo journalctl -u zsmanager-backend --no-pager -n 20
+    exit 1
+fi
+
+# Configure and start nginx
+log "Configuring and starting nginx..."
+
+# Test nginx configuration first
+if ! sudo nginx -t; then
+    error "Nginx configuration test failed"
+    exit 1
+fi
+
+# Stop nginx if it was running before
+if [ "$NGINX_WAS_RUNNING" = true ]; then
+    log "Restarting nginx (was already running)..."
+    if sudo systemctl restart nginx; then
+        log "✓ Nginx restarted successfully"
+    else
+        error "Failed to restart nginx"
+        sudo journalctl -u nginx --no-pager -n 20
+        exit 1
+    fi
+else
+    log "Starting nginx..."
+    if sudo systemctl start nginx && sudo systemctl enable nginx; then
+        log "✓ Nginx started and enabled"
+    else
+        error "Failed to start nginx"
+        sudo journalctl -u nginx --no-pager -n 20
+        exit 1
+    fi
+fi
 
 # Wait for services to start
 sleep 5
