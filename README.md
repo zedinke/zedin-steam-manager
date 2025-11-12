@@ -88,13 +88,21 @@ sudo groupadd zsmanager
 # 2. Create zsmanager user (system user for service)
 sudo useradd -r -m -g zsmanager -s /bin/bash zsmanager
 
-# 3. Add zsmanager user to sudo group (for system operations)
+# 3. Set password for zsmanager user (required for security)
+sudo passwd zsmanager
+# Enter a secure password when prompted
+
+# 4. Add zsmanager user to sudo group (for system operations)
 sudo usermod -aG sudo zsmanager
 
-# 4. Create your personal user (if not exists) and add to zsmanager group
+# 5. Create your personal user (if not exists) and add to zsmanager group
 sudo useradd -m -g users -G zsmanager -s /bin/bash yourusername
 # OR add existing user to zsmanager group:
 sudo usermod -aG zsmanager yourusername
+
+# 6. Set password for your personal user (if newly created)
+sudo passwd yourusername
+# Enter a secure password when prompted
 
 # 5. Set up directory permissions
 sudo mkdir -p /opt/zedin-steam-manager
@@ -116,6 +124,14 @@ sudo chmod 750 /etc/zedin
 # 8. Switch to regular user (NOT root) for installation
 su - yourusername  # Replace with your username
 ```
+
+### 🔐 Security Notes for User Setup
+
+- **Strong Passwords**: Always use strong, unique passwords for both `zsmanager` and personal users
+- **SSH Keys**: Consider setting up SSH key authentication instead of password-only access
+- **Limited Privileges**: The `zsmanager` user has sudo access only for system operations
+- **Service Account**: `zsmanager` is designed as a service account - avoid using it for daily operations
+- **Regular Updates**: Keep user passwords updated regularly for security
 
 ### Important: Installation User Requirements
 
