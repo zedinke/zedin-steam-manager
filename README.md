@@ -1,5 +1,11 @@
 # Zedin Steam Manager
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Node.js](https://img.shields.io/badge/node.js-18+-green.svg)](https://nodejs.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-00a393.svg)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-18+-61dafb.svg)](https://reactjs.org/)
+
 Professional Steam Server Manager for ASE (Ark: Survival Evolved) and ASA (Ark: Survival Ascended) servers.
 
 ## Features
@@ -72,8 +78,8 @@ Zedin Steam Manager/
 ### Quick Start
 ```bash
 # Clone repository
-git clone https://github.com/zedin/steam-manager.git
-cd steam-manager
+git clone https://github.com/zedinke/zedin-steam-manager.git
+cd zedin-steam-manager
 
 # Install all dependencies
 npm run install:all
