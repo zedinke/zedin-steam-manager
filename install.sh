@@ -1,4 +1,4 @@
-#!/bin/bash
+﻿#!/bin/bash
 
 # ============================================================================
 # Zedin Steam Manager - Linux Installation Script
@@ -203,7 +203,7 @@ if [ "$NODE_VERSION" -lt 18 ]; then
     error "Node.js 18+ required. Current version: $(node --version)"
 fi
 
-log "✓ Python $PYTHON_VERSION and Node.js $(node --version) installed successfully"
+log "âś“ Python $PYTHON_VERSION and Node.js $(node --version) installed successfully"
 
 # Install SteamCMD dependencies
 log "Installing SteamCMD dependencies..."
@@ -224,7 +224,7 @@ if wget -q -O steamcmd.tar.gz https://steamcdn-a.akamaihd.net/client/installer/s
     sudo tar -xzf steamcmd.tar.gz -C $STEAMCMD_DIR
     sudo chown -R root:root $STEAMCMD_DIR
     sudo chmod +x $STEAMCMD_DIR/steamcmd.sh
-    log "✓ SteamCMD installed successfully"
+    log "âś“ SteamCMD installed successfully"
 else
     warning "SteamCMD download failed - continuing without it (can be installed manually later)"
 fi
@@ -292,7 +292,7 @@ if [ -d "backend" ] && [ -d "frontend" ]; then
     log "Found application files - copying to $INSTALL_DIR"
     sudo cp -r * $INSTALL_DIR/
     sudo chown -R $SERVICE_USER:$SERVICE_USER $INSTALL_DIR
-    log "✓ Application files copied successfully"
+    log "âś“ Application files copied successfully"
 else
     error "Application files not found. Please run this script from the project directory containing backend/ and frontend/ folders."
 fi
@@ -307,7 +307,7 @@ cd backend
 pip install --upgrade pip
 pip install -r requirements.txt
 cd ..
-echo "✓ Python dependencies installed"
+echo "âś“ Python dependencies installed"
 EOF
 
 # Install Node.js dependencies and build frontend
@@ -324,7 +324,7 @@ npm install
 npm run build
 cd ..
 
-echo "✓ Frontend built successfully"
+echo "âś“ Frontend built successfully"
 EOF
 
 # ============================================================================
@@ -410,7 +410,7 @@ log "Building frontend application..."
 cd "$INSTALL_DIR/frontend"
 sudo -u $SERVICE_USER npm install
 if sudo -u $SERVICE_USER npm run build; then
-    log "✓ Frontend built successfully"
+    log "âś“ Frontend built successfully"
 else
     error "Frontend build failed"
 fi
@@ -626,9 +626,9 @@ try:
     from config.database import engine
     from models import base
     base.Base.metadata.create_all(bind=engine)
-    print('✓ Database initialized successfully')
+    print('âś“ Database initialized successfully')
 except Exception as e:
-    print(f'✗ Database initialization failed: {e}')
+    print(f'âś— Database initialization failed: {e}')
     exit(1)
 "
 EOF
@@ -639,7 +639,7 @@ sudo systemctl enable zsmanager-backend
 # Start backend service
 log "Starting backend service..."
 if sudo systemctl start zsmanager-backend; then
-    log "✓ Backend service started"
+    log "âś“ Backend service started"
 else
     error "Failed to start backend service"
     sudo journalctl -u zsmanager-backend --no-pager -n 20
@@ -684,7 +684,7 @@ fi
 if [ "$NGINX_WAS_RUNNING" = true ]; then
     log "Restarting nginx (was already running)..."
     if sudo systemctl restart nginx; then
-        log "✓ Nginx restarted successfully"
+        log "âś“ Nginx restarted successfully"
     else
         error "Failed to restart nginx"
         sudo journalctl -u nginx --no-pager -n 20
@@ -693,7 +693,7 @@ if [ "$NGINX_WAS_RUNNING" = true ]; then
 else
     log "Starting nginx..."
     if sudo systemctl start nginx && sudo systemctl enable nginx; then
-        log "✓ Nginx started and enabled"
+        log "âś“ Nginx started and enabled"
     else
         error "Failed to start nginx"
         sudo journalctl -u nginx --no-pager -n 20
@@ -705,32 +705,32 @@ fi
 sleep 5
 
 # Check service status
-BACKEND_STATUS="✗ Failed"
-NGINX_STATUS="✗ Failed"
+BACKEND_STATUS="âś— Failed"
+NGINX_STATUS="âś— Failed"
 
 if sudo systemctl is-active --quiet zsmanager-backend; then
-    BACKEND_STATUS="✓ Running"
+    BACKEND_STATUS="âś“ Running"
 else
     log "Backend service issue - checking logs..."
     sudo journalctl -u zsmanager-backend --no-pager -n 10
 fi
 
 if sudo systemctl is-active --quiet nginx; then
-    NGINX_STATUS="✓ Running"
+    NGINX_STATUS="âś“ Running"
 else
     log "Nginx service issue - checking logs..."
     sudo journalctl -u nginx --no-pager -n 10
 fi
 
 # Test connectivity
-API_STATUS="✗ Not responding"
+API_STATUS="âś— Not responding"
 if curl -s http://localhost:8000/api/health >/dev/null 2>&1; then
-    API_STATUS="✓ API responding"
+    API_STATUS="âś“ API responding"
 fi
 
-FRONTEND_STATUS="✗ Not accessible"
+FRONTEND_STATUS="âś— Not accessible"
 if curl -s http://localhost/ >/dev/null 2>&1; then
-    FRONTEND_STATUS="✓ Frontend accessible"
+    FRONTEND_STATUS="âś“ Frontend accessible"
 fi
 
 # ============================================================================
@@ -739,47 +739,47 @@ fi
 
 clear
 echo "============================================================================"
-echo "                    🎉 INSTALLATION COMPLETE! 🎉"
+echo "                    đźŽ‰ INSTALLATION COMPLETE! đźŽ‰"
 echo "============================================================================"
 echo ""
 echo "Zedin Steam Manager has been successfully installed!"
 echo ""
-echo "📊 Service Status:"
+echo "đź“Š Service Status:"
 echo "   Backend: $BACKEND_STATUS"
 echo "   Nginx: $NGINX_STATUS"
 echo "   API: $API_STATUS"
 echo "   Frontend: $FRONTEND_STATUS"
 echo ""
-echo "📍 Access Points:"
+echo "đź“Ť Access Points:"
 echo "   Web Interface: http://$(hostname -I | awk '{print $1}')"
 echo "   API Documentation: http://$(hostname -I | awk '{print $1}')/docs"
 echo "   Health Check: http://$(hostname -I | awk '{print $1}')/health"
 echo ""
-echo "🔧 Service Management:"
+echo "đź”§ Service Management:"
 echo "   Status: sudo systemctl status zsmanager-backend"
 echo "   Logs: sudo journalctl -f -u zsmanager-backend"
 echo "   Stop: sudo systemctl stop zsmanager-backend"
 echo "   Start: sudo systemctl start zsmanager-backend"
 echo "   Restart: sudo systemctl restart zsmanager-backend"
 echo ""
-echo "📂 Important Directories:"
+echo "đź“‚ Important Directories:"
 echo "   Application: $INSTALL_DIR"
 echo "   Data: $DATA_DIR"
 echo "   Logs: $LOG_DIR"
 echo "   Config: /etc/zedin"
 echo ""
-echo "🔐 Security Features:"
+echo "đź” Security Features:"
 echo "   Firewall: Enabled (UFW)"
 echo "   Service User: $SERVICE_USER (non-root)"
 echo "   Game Server Ports: 7777-7877 (TCP/UDP)"
 echo ""
-if [ "$BACKEND_STATUS" = "✓ Running" ] && [ "$NGINX_STATUS" = "✓ Running" ]; then
-    echo "🎯 Ready to use! Open your web browser and go to:"
+if [ "$BACKEND_STATUS" = "âś“ Running" ] && [ "$NGINX_STATUS" = "âś“ Running" ]; then
+    echo "đźŽŻ Ready to use! Open your web browser and go to:"
     echo "   http://$(hostname -I | awk '{print $1}')"
     echo ""
     echo "   Default login will be created on first access."
 else
-    echo "⚠️  Some services need attention. Check the logs above."
+    echo "âš ď¸Ź  Some services need attention. Check the logs above."
     echo "   Troubleshooting: sudo journalctl -f -u zsmanager-backend"
 fi
 echo ""
@@ -837,32 +837,32 @@ sudo systemctl restart nginx
 sleep 5
 
 # Check service status
-BACKEND_STATUS="✗ Failed"
-NGINX_STATUS="✗ Failed"
+BACKEND_STATUS="âś— Failed"
+NGINX_STATUS="âś— Failed"
 
 if sudo systemctl is-active --quiet zsmanager-backend; then
-    BACKEND_STATUS="✓ Running"
+    BACKEND_STATUS="âś“ Running"
 else
     log "Backend service issue - checking logs..."
     sudo journalctl -u zsmanager-backend --no-pager -n 10
 fi
 
 if sudo systemctl is-active --quiet nginx; then
-    NGINX_STATUS="✓ Running"
+    NGINX_STATUS="âś“ Running"
 else
     log "Nginx service issue - checking logs..."
     sudo journalctl -u nginx --no-pager -n 10
 fi
 
 # Test connectivity
-API_STATUS="✗ Not responding"
+API_STATUS="âś— Not responding"
 if curl -s http://localhost:8000/api/health >/dev/null 2>&1; then
-    API_STATUS="✓ API responding"
+    API_STATUS="âś“ API responding"
 fi
 
-FRONTEND_STATUS="✗ Not accessible"
+FRONTEND_STATUS="âś— Not accessible"
 if curl -s http://localhost >/dev/null 2>&1; then
-    FRONTEND_STATUS="✓ Frontend accessible"
+    FRONTEND_STATUS="âś“ Frontend accessible"
 fi
 
 # ============================================================================
@@ -871,41 +871,41 @@ fi
 
 echo ""
 echo "============================================================================"
-echo "                    🎉 INSTALLATION COMPLETE! 🎉"
+echo "                    đźŽ‰ INSTALLATION COMPLETE! đźŽ‰"
 echo "============================================================================"
 echo ""
 echo "Zedin Steam Manager has been successfully installed!"
 echo ""
-echo "📊 Service Status:"
+echo "đź“Š Service Status:"
 echo "   Backend: $BACKEND_STATUS"
 echo "   Nginx: $NGINX_STATUS"  
 echo "   API: $API_STATUS"
 echo "   Frontend: $FRONTEND_STATUS"
 echo ""
-echo "📍 Access Points:"
+echo "đź“Ť Access Points:"
 echo "   Web Interface: http://$(hostname -I | awk '{print $1}')"
 echo "   API Documentation: http://$(hostname -I | awk '{print $1}')/docs"
 echo "   Health Check: http://$(hostname -I | awk '{print $1}')/health"
 echo ""
-echo "🔧 Service Management:"
+echo "đź”§ Service Management:"
 echo "   Status: sudo systemctl status zsmanager-backend"
 echo "   Logs: sudo journalctl -f -u zsmanager-backend"
 echo "   Stop: sudo systemctl stop zsmanager-backend"
 echo "   Start: sudo systemctl start zsmanager-backend"
 echo "   Restart: sudo systemctl restart zsmanager-backend"
 echo ""
-echo "📂 Important Directories:"
+echo "đź“‚ Important Directories:"
 echo "   Application: $INSTALL_DIR"
 echo "   Data: $DATA_DIR"
 echo "   Logs: $LOG_DIR"
 echo "   Config: /etc/zedin"
 echo ""
-echo "🔐 Security Features:"
+echo "đź” Security Features:"
 echo "   Firewall: Enabled (UFW)"
 echo "   Service User: $SERVICE_USER (non-root)"
 echo "   Game Server Ports: 7777-7877 (TCP/UDP)"
 echo ""
-echo "🎯 Ready to use! Open your web browser and go to:"
+echo "đźŽŻ Ready to use! Open your web browser and go to:"
 echo "   http://$(hostname -I | awk '{print $1}')"
 echo ""
 echo "   Default login will be created on first access."
@@ -914,214 +914,5 @@ echo "==========================================================================
 
 log "Installation completed successfully!"
 
-log "PHASE 3: Installing application..."
-
-# Copy application files
-if [ -d "backend" ] && [ -d "frontend" ] && [ -d "electron" ]; then
-    log "Copying application files..."
-    sudo cp -r * $INSTALL_DIR/
-else
-    error "Application files not found. Please run from the project directory."
-fi
-
-# Set ownership
-sudo chown -R $SERVICE_USER:$SERVICE_USER $INSTALL_DIR
-
-# Install dependencies
-sudo -u $SERVICE_USER bash << 'EOF'
-cd /opt/zedin-steam-manager
-
-# Create Python virtual environment
-log() { echo -e "\033[0;32m[$(date '+%Y-%m-%d %H:%M:%S')] $1\033[0m"; }
-log "Creating Python virtual environment..."
-python3 -m venv venv
-source venv/bin/activate
-
-# Install Python dependencies
-log "Installing Python dependencies..."
-cd backend
-pip install --upgrade pip
-pip install -r requirements.txt
-cd ..
-
-# Install Node.js dependencies
-log "Installing Node.js dependencies..."
-npm install
-cd frontend && npm install && npm run build && cd ..
-EOF
-
-# ============================================================================
-# PHASE 4: Configuration
-# ============================================================================
-
-log "PHASE 4: Creating configuration..."
-
-# Environment file
-sudo tee /etc/zedin/zsmanager.env > /dev/null << EOF
-APP_NAME=Zedin Steam Manager
-VERSION=0.000001
-DEBUG=False
-HOST=0.0.0.0
-PORT=8000
-DATABASE_URL=sqlite:///$DATA_DIR/zedin_steam_manager.db
-SECRET_KEY=$(openssl rand -hex 32)
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=1440
-STEAMCMD_PATH=$STEAMCMD_DIR
-SHARED_FILES_PATH=$DATA_DIR/shared_files
-SERVERS_PATH=$DATA_DIR/servers
-LOG_FILE=$LOG_DIR/steam_manager.log
-ASE_APP_ID=376030
-ASA_APP_ID=2430930
-GITHUB_REPO=zedinke/zedin-steam-manager
-UPDATE_CHECK_INTERVAL=3600
-SYSTEM_MONITOR_INTERVAL=5
-MAX_REMOTE_HOSTS=50
-SSH_TIMEOUT=30
-RCON_TIMEOUT=10
-EOF
-
-sudo chown root:$SERVICE_USER /etc/zedin/zsmanager.env
-sudo chmod 640 /etc/zedin/zsmanager.env
-
-# ============================================================================
-# PHASE 5: Services
-# ============================================================================
-
-log "PHASE 5: Setting up services..."
-
-# Backend service
-sudo tee /etc/systemd/system/zsmanager-backend.service > /dev/null << EOF
-[Unit]
-Description=Zedin Steam Manager Backend
-After=network.target
-
-[Service]
-Type=simple
-User=$SERVICE_USER
-Group=$SERVICE_USER
-WorkingDirectory=$INSTALL_DIR/backend
-Environment=PATH=$INSTALL_DIR/venv/bin
-EnvironmentFile=/etc/zedin/zsmanager.env
-ExecStart=$INSTALL_DIR/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
-Restart=always
-RestartSec=3
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# ============================================================================
-# PHASE 6: Web Server
-# ============================================================================
-
-log "PHASE 6: Setting up Nginx..."
-
-sudo apt install -y nginx
-
-sudo tee /etc/nginx/sites-available/zedin-steam-manager > /dev/null << 'EOF'
-server {
-    listen 80;
-    server_name _;
-
-    location / {
-        root /opt/zedin-steam-manager/frontend/dist;
-        index index.html;
-        try_files $uri $uri/ /index.html;
-    }
-
-    location /api/ {
-        proxy_pass http://localhost:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-
-    location /docs {
-        proxy_pass http://localhost:8000;
-    }
-}
-EOF
-
-sudo ln -sf /etc/nginx/sites-available/zedin-steam-manager /etc/nginx/sites-enabled/
-sudo rm -f /etc/nginx/sites-enabled/default
-sudo nginx -t
-
-# ============================================================================
-# PHASE 7: Firewall
-# ============================================================================
-
-log "PHASE 7: Configuring firewall..."
-
-sudo ufw --force enable
-sudo ufw allow ssh
-sudo ufw allow 'Nginx Full'
-sudo ufw allow 7777:7877/tcp
-sudo ufw allow 7777:7877/udp
-
-# ============================================================================
-# PHASE 8: Start Services
-# ============================================================================
-
-log "PHASE 8: Starting services..."
-
-# Initialize database
-sudo -u $SERVICE_USER bash << 'EOF'
-cd /opt/zedin-steam-manager
-source venv/bin/activate
-cd backend
-python3 -c "
-from config.database import engine
-from models import base
-base.Base.metadata.create_all(bind=engine)
-print('Database initialized')
-"
-EOF
-
-sudo systemctl daemon-reload
-sudo systemctl enable zsmanager-backend
-sudo systemctl start zsmanager-backend
-sudo systemctl restart nginx
-
-# Wait and check
-sleep 5
-
-if sudo systemctl is-active --quiet zsmanager-backend; then
-    log "✓ Backend service started"
-else
-    error "✗ Backend service failed to start"
-fi
-
-if sudo systemctl is-active --quiet nginx; then
-    log "✓ Nginx started"
-else
-    error "✗ Nginx failed"
-fi
-
-# ============================================================================
-# Complete
-# ============================================================================
-
-clear
-echo "============================================================================"
-echo "                    🎉 INSTALLATION COMPLETE! 🎉"
-echo "============================================================================"
-echo ""
-echo "log "Installation completed successfully!""
-echo ""
-echo "📍 Access:"
-echo "   Web: http://$(hostname -I | awk '{print $1}')"
-echo "   API: http://$(hostname -I | awk '{print $1}')/docs"
-echo ""
-echo "🔧 Management:"
-echo "   Status: sudo systemctl status zsmanager-backend"
-echo "   Logs: sudo journalctl -f -u zsmanager-backend"
-echo "   Stop: sudo systemctl stop zsmanager-backend"
-echo "   Start: sudo systemctl start zsmanager-backend"
-echo ""
-echo "📂 Paths:"
-echo "   App: $INSTALL_DIR"
-echo "   Data: $DATA_DIR"
-echo "   Logs: $LOG_DIR"
-echo ""
-echo "============================================================================"
+# End of script
+exit 0
