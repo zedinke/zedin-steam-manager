@@ -292,7 +292,14 @@ if [ -d "backend" ] && [ -d "frontend" ]; then
     log "Found application files - copying to $INSTALL_DIR"
     sudo cp -r * $INSTALL_DIR/
     sudo chown -R $SERVICE_USER:$SERVICE_USER $INSTALL_DIR
-    log "âś“ Application files copied successfully"
+    
+    # Make scripts executable
+    if [ -f "$INSTALL_DIR/update.sh" ]; then
+        sudo chmod +x $INSTALL_DIR/update.sh
+        log "✓ Update script made executable"
+    fi
+    
+    log "✓ Application files copied successfully"
 else
     error "Application files not found. Please run this script from the project directory containing backend/ and frontend/ folders."
 fi
@@ -900,12 +907,17 @@ echo "   Data: $DATA_DIR"
 echo "   Logs: $LOG_DIR"
 echo "   Config: /etc/zedin"
 echo ""
-echo "đź” Security Features:"
+echo "🔐 Security Features:"
 echo "   Firewall: Enabled (UFW)"
 echo "   Service User: $SERVICE_USER (non-root)"
 echo "   Game Server Ports: 7777-7877 (TCP/UDP)"
 echo ""
-echo "đźŽŻ Ready to use! Open your web browser and go to:"
+echo "🔄 Updates & Maintenance:"
+echo "   Easy Update: cd $INSTALL_DIR && sudo ./update.sh"
+echo "   Git Pull: cd $INSTALL_DIR && git pull"
+echo "   Manual Restart: sudo systemctl restart zsmanager-backend"
+echo ""
+echo "🎯 Ready to use! Open your web browser and go to:"
 echo "   http://$(hostname -I | awk '{print $1}')"
 echo ""
 echo "   Default login will be created on first access."
