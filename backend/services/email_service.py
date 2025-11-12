@@ -1,8 +1,8 @@
 import smtplib
 import secrets
 import string
-from email.mime.text import MimeText
-from email.mime.multipart import MimeMultipart
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from typing import Optional
 from sqlalchemy.orm import Session
@@ -134,12 +134,12 @@ class EmailService:
                 verification_link
             )
             
-            msg = MimeMultipart('alternative')
+            msg = MIMEMultipart('alternative')
             msg['Subject'] = "🎮 Email megerősítés - Zedin Steam Manager"
             msg['From'] = f"{self.sender_name} <{self.sender_email}>"
             msg['To'] = user.email
             
-            html_part = MimeText(html_content, 'html', 'utf-8')
+            html_part = MIMEText(html_content, 'html', 'utf-8')
             msg.attach(html_part)
             
             # Send email
@@ -196,12 +196,12 @@ class EmailService:
             </html>
             """
             
-            msg = MimeMultipart('alternative')
+            msg = MIMEMultipart('alternative')
             msg['Subject'] = "🎉 Üdvözlünk a Zedin Steam Manager-ben!"
             msg['From'] = f"{self.sender_name} <{self.sender_email}>"
             msg['To'] = user.email
             
-            html_part = MimeText(welcome_html, 'html', 'utf-8')
+            html_part = MIMEText(welcome_html, 'html', 'utf-8')
             msg.attach(html_part)
             
             with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
