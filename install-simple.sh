@@ -52,12 +52,39 @@ sudo mkdir -p $INSTALL_DIR $LOG_DIR $DATA_DIR/{servers,shared_files,backups} /et
 sudo chown -R $SERVICE_USER:users $INSTALL_DIR $DATA_DIR $LOG_DIR
 
 log "PHASE 3: Installing application..."
-# Copy files
+# Copy files - check current directory first
+CURRENT_DIR=$(pwd)
+log "Current directory: $CURRENT_DIR"
+log "Directory contents:"
+ls -la
+
+# Check if we're in the right directory
 if [ -d "backend" ] && [ -d "frontend" ]; then
+    log "Found application files in current directory"
     sudo cp -r * $INSTALL_DIR/
     sudo chown -R $SERVICE_USER:users $INSTALL_DIR
+elif [ -d "../backend" ] && [ -d "../frontend" ]; then
+    log "Found application files in parent directory"
+    sudo cp -r ../* $INSTALL_DIR/
+    sudo chown -R $SERVICE_USER:users $INSTALL_DIR
 else
-    error "Application files not found"
+    log "Searching for application files..."
+    # Try to find the project directory
+    PROJECT_DIR=""
+    for dir in /home/*/zedin-steam-manager /tmp/zedin-steam-manager /opt/zedin-steam-manager /zedin-steam-manager; do
+        if [ -d "$dir/backend" ] && [ -d "$dir/frontend" ]; then
+            PROJECT_DIR="$dir"
+            break
+        fi
+    done
+    
+    if [ -n "$PROJECT_DIR" ]; then
+        log "Found project directory at: $PROJECT_DIR"
+        sudo cp -r $PROJECT_DIR/* $INSTALL_DIR/
+        sudo chown -R $SERVICE_USER:users $INSTALL_DIR
+    else
+        error "Application files not found. Please run from the project directory or ensure backend/ and frontend/ exist"
+    fi
 fi
 
 log "PHASE 4: Installing Python dependencies..."
