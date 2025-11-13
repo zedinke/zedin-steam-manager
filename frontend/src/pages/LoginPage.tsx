@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import {
   Container, Paper, TextField, Button, Typography,
   Box, Alert, CircularProgress
@@ -7,7 +7,6 @@ import {
 import api from '../services/api'
 
 export default function LoginPage() {
-  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -22,7 +21,12 @@ export default function LoginPage() {
       const response = await api.post('/auth/login', { email, password })
       localStorage.setItem('token', response.data.access_token)
       localStorage.setItem('user', JSON.stringify(response.data.user))
-      navigate('/dashboard')
+      
+      // Small delay to ensure token is saved and state is clean
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      // Force navigation with state reset
+      window.location.href = '/dashboard'
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Login failed')
     } finally {

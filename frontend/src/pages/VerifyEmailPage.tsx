@@ -61,15 +61,18 @@ export default function VerifyEmailPage() {
           {status === 'success' && (
             <Box sx={{ my: 4 }}>
               <CheckCircleIcon sx={{ fontSize: 60, color: 'success.main' }} />
-              <Alert severity="success" sx={{ mt: 2 }}>
+              <Alert severity="success" sx={{ mt: 2, mb: 2 }}>
                 {message}
               </Alert>
+              <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+                A regisztráció sikeresen befejezve! Most már bejelentkezhet a fiókjába.
+              </Typography>
               <Button
                 variant="contained"
                 onClick={() => navigate('/login')}
-                sx={{ mt: 3 }}
+                sx={{ mt: 2 }}
               >
-                Go to Login
+                Bejelentkezés
               </Button>
             </Box>
           )}
