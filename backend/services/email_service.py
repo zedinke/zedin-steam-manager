@@ -293,7 +293,7 @@ async def send_verification_email(email: str, username: str, token: str):
     if not smtp_password or smtp_password == "change_me_in_production":
         log_message = f"""
     {'='*80}
-    # 📧 EMAIL VERIFICATION (Development Mode)
+    # EMAIL VERIFICATION (Development Mode)
     EMAIL VERIFICATION (Development Mode)
     {'='*80}
     To: {email}
@@ -320,7 +320,7 @@ async def send_verification_email(email: str, username: str, token: str):
         print(f"✅ Email sent successfully to {email}", flush=True)
     except Exception as e:
         print(f"❌ Failed to send email: {e}", flush=True)
-        print(f"📧 Verification URL: {verification_url}", flush=True)
+        print(f"Verification URL: {verification_url}", flush=True)
 
 
 async def send_token_email(email: str, username: str, token_code: str, duration_days: int):
@@ -573,7 +573,7 @@ async def send_expiry_notification(email: str, username: str, token_code: str, d
     smtp_password = os.getenv("SMTP_PASSWORD")
     
     if not smtp_password or smtp_password == "change_me_in_production":
-        print(f"📧 EXPIRY EMAIL (Dev Mode) - {email}: {days_remaining} days", flush=True)
+        print(f"EXPIRY EMAIL (Dev Mode) - {email}: {days_remaining} days", flush=True)
         return
     
     try:
@@ -691,7 +691,7 @@ async def send_password_reset_email(email: str, username: str, reset_token: str)
     if not smtp_password or smtp_password == "change_me_in_production":
         log_message = f"""
 {'='*80}
-📧 PASSWORD RESET EMAIL (Development Mode)
+PASSWORD RESET EMAIL (Development Mode)
 {'='*80}
 To: {email}
 Reset URL: {reset_url}
