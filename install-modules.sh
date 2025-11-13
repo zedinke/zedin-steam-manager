@@ -327,11 +327,12 @@ EMAIL_ENABLED=False
 LOG_LEVEL=INFO
 EOF
     
+    sudo chown $SERVICE_USER:$SERVICE_USER /etc/zedin/zsmanager.env
     sudo chmod 640 /etc/zedin/zsmanager.env
-    sudo chown root:$SERVICE_USER /etc/zedin/zsmanager.env
     
     # Create backend .env symlink
     sudo ln -sf /etc/zedin/zsmanager.env $INSTALL_DIR/backend/.env
+    sudo chown -h $SERVICE_USER:$SERVICE_USER $INSTALL_DIR/backend/.env
     
     log "✅ Configuration created"
 }
@@ -777,7 +778,7 @@ init_database() {
     fi
     
     # Verify config file permissions
-    sudo chown root:$SERVICE_USER /etc/zedin/zsmanager.env
+    sudo chown $SERVICE_USER:$SERVICE_USER /etc/zedin/zsmanager.env
     sudo chmod 640 /etc/zedin/zsmanager.env
     
     sudo -u $SERVICE_USER bash << 'EOF'
