@@ -37,7 +37,9 @@ cp backend/.env.example backend/.env
 
 # 4. Initialize database
 cd backend
-python3 init_db.py
+source venv/bin/activate
+python init_db.py
+deactivate
 cd ..
 
 # 5. Start development
@@ -55,7 +57,7 @@ cd ..
 ### Linux Additional Requirements
 ```bash
 sudo apt update
-sudo apt install -y python3 python3-pip nodejs npm
+sudo apt install -y python3 python3-pip python3-venv python3-full nodejs npm
 ```
 
 ## ✨ Features (Version 0.000001)

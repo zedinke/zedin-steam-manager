@@ -53,9 +53,19 @@ chmod +x install.sh
 
 ## 5. Initialize Database
 
+### Windows:
 ```bash
 cd backend
 python init_db.py
+cd ..
+```
+
+### Linux:
+```bash
+cd backend
+source venv/bin/activate
+python init_db.py
+deactivate
 cd ..
 ```
 

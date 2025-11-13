@@ -2,8 +2,9 @@
 echo "Starting Zedin Steam Manager Development Environment..."
 echo ""
 
-# Start backend in background
+# Start backend in background with virtual environment
 cd backend
+source venv/bin/activate
 uvicorn main:app --reload --host 0.0.0.0 --port 8000 &
 BACKEND_PID=$!
 cd ..
@@ -31,6 +32,9 @@ cleanup() {
     echo "Stopping services..."
     kill $BACKEND_PID 2>/dev/null
     kill $FRONTEND_PID 2>/dev/null
+    cd backend
+    deactivate 2>/dev/null
+    cd ..
     echo "Services stopped."
     exit 0
 }
