@@ -221,17 +221,17 @@ async def send_verification_email(email: str, username: str, token: str):
 
                 <div class="features">
                     <div class="feature">
-                        <div class="feature-icon">[fast]</div>
+                        <div class="feature-icon"></div>
                         <div class="feature-title">Gyors Telepítés</div>
                         <div class="feature-desc">Automatikus szerver setup</div>
                     </div>
                     <div class="feature">
-                        <div class="feature-icon">[stats]</div>
+                        <div class="feature-icon"></div>
                         <div class="feature-title">Valós idejű Monitorozás</div>
                         <div class="feature-desc">RAM, CPU, HDD köv etés</div>
                     </div>
                     <div class="feature">
-                        <div class="feature-icon">[tools]</div>
+                        <div class="feature-icon"></div>
                         <div class="feature-title">RCON Kezelés</div>
                         <div class="feature-desc">Teljes szerver kontroll</div>
                     </div>
@@ -369,13 +369,13 @@ async def send_token_email(email: str, username: str, token_code: str, duration_
                             <table role="presentation" style="width: 100%; margin: 30px 0; background: #f8f9fa; border-radius: 12px; overflow: hidden;">
                                 <tr>
                                     <td style="padding: 20px; border-bottom: 1px solid #e9ecef;">
-                                        <p style="margin: 0; color: #666; font-size: 14px;">⏱️ <strong>Érvényesség:</strong></p>
+                                        <p style="margin: 0; color: #666; font-size: 14px;"><strong>Érvényesség:</strong></p>
                                         <p style="margin: 5px 0 0 0; color: #333; font-size: 16px;">{{ duration_days }} nap</p>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td style="padding: 20px;">
-                                        <p style="margin: 0; color: #666; font-size: 14px;">🎯 <strong>Jogosultság:</strong></p>
+                                        <p style="margin: 0; color: #666; font-size: 14px;"><strong>Jogosultság:</strong></p>
                                         <p style="margin: 5px 0 0 0; color: #333; font-size: 16px;">Server Admin</p>
                                     </td>
                                 </tr>
@@ -393,7 +393,7 @@ async def send_token_email(email: str, username: str, token_code: str, duration_
                             <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 8px; margin: 30px 0;">
                                 <h3 style="margin: 0 0 15px 0; color: #856404; font-size: 16px;">
                                     Aktiválási Lépések
-                                </h3>
+                                </h3> 
                                 <ol style="margin: 0; padding-left: 20px; color: #856404; font-size: 14px; line-height: 1.8;">
                                     <li>Jelentkezz be a Zedin Steam Manager fiókodba</li>
                                     <li>Navigálj a "Token Aktiválás" menüpontba</li>
@@ -413,7 +413,7 @@ async def send_token_email(email: str, username: str, token_code: str, duration_
                                 Ez egy automatikus email. Kérjük, ne válaszolj rá.
                             </p>
                             <p style="margin: 0; color: #dc3545; font-size: 12px; font-weight: bold;">
-                                ⚠️ Ne oszd meg a token kódot senkivel!
+                                Ne oszd meg a token kódot senkivel!
                             </p>
                         </td>
                     </tr>
@@ -529,7 +529,7 @@ async def send_expiry_notification(email: str, username: str, token_code: str, d
                                     <td style="text-align: center;">
                                         <a href="{{ frontend_url }}/dashboard" 
                                            style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
-                                            📊 Dashboard Megnyitása
+                                            Dashboard Megnyitása
                                         </a>
                                     </td>
                                 </tr>
@@ -609,7 +609,7 @@ async def send_password_reset_email(email: str, username: str, reset_token: str)
                     <tr>
                         <td style="background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); padding: 40px 30px; text-align: center;">
                             <h1 style="margin: 0; color: white; font-size: 28px; font-weight: bold;">
-                                🔐 Jelszó Visszaállítás
+                                Jelszó Visszaállítás
                             </h1>
                             <p style="margin: 10px 0 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">
                                 Zedin Steam Manager
@@ -625,23 +625,12 @@ async def send_password_reset_email(email: str, username: str, reset_token: str)
                                 Jelszó visszaállítást kértél a <strong>Zedin Steam Manager</strong> fiókodhoz. 
                                 Ha nem te voltál, nyugodtan hagyd figyelmen kívül ezt az emailt.
                             </p>
-                            <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); padding: 30px; border-radius: 15px; margin: 30px 0; text-align: center; box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);">
-                                <p style="margin: 0 0 10px 0; color: white; font-size: 14px; text-transform: uppercase; letter-spacing: 2px;">
-                                    ⏱️ Érvényesség
-                                </p>
-                                <p style="margin: 0; color: white; font-size: 48px; font-weight: bold;">
-                                    1
-                                </p>
-                                <p style="margin: 10px 0 0 0; color: white; font-size: 18px;">
-                                    óra
-                                </p>
-                            </div>
                             <table role="presentation" style="margin: 30px 0; width: 100%;">
                                 <tr>
                                     <td style="text-align: center;">
                                         <a href="{{ reset_url }}" 
-                                           style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
-                                            🔑 Jelszó Visszaállítása
+                                           style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);"> 
+                                            Jelszó Visszaállítása
                                         </a>
                                     </td>
                                 </tr>
@@ -656,7 +645,7 @@ async def send_password_reset_email(email: str, username: str, reset_token: str)
                             </div>
                             <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 8px; margin: 30px 0;">
                                 <h3 style="margin: 0 0 15px 0; color: #856404; font-size: 16px;">
-                                    ⚠️ Biztonsági Megjegyzés
+                                    Biztonsági Megjegyzés
                                 </h3>
                                 <ul style="margin: 0; padding-left: 20px; color: #856404; font-size: 14px; line-height: 1.8;">
                                     <li>Ez a link 1 órán belül lejár</li>
@@ -667,7 +656,7 @@ async def send_password_reset_email(email: str, username: str, reset_token: str)
                             </div>
                             <div style="background: #d1ecf1; border-left: 4px solid #0c5460; padding: 20px; border-radius: 8px; margin: 30px 0;">
                                 <p style="margin: 0; color: #0c5460; font-size: 14px; line-height: 1.6;">
-                                    <strong>💡 Tipp:</strong> Válassz erős jelszót, amely tartalmaz kisbetűket, 
+                                    <strong>Tipp:</strong> Válassz erős jelszót, amely tartalmaz kisbetűket, 
                                     nagybetűket, számokat és speciális karaktereket.
                                 </p>
                             </div>
@@ -682,7 +671,7 @@ async def send_password_reset_email(email: str, username: str, reset_token: str)
                                 Ez egy automatikus email. Kérjük, ne válaszolj rá.
                             </p>
                             <p style="margin: 0; color: #dc3545; font-size: 12px; font-weight: bold;">
-                                🔒 Ha nem te kérted a visszaállítást, azonnal jelezz nekünk!
+                                Ha nem te kérted a visszaállítást, azonnal jelezz nekünk!
                             </p>
                         </td>
                     </tr>
@@ -700,7 +689,7 @@ async def send_password_reset_email(email: str, username: str, reset_token: str)
     )
     
     message = MIMEMultipart('alternative')
-    message['Subject'] = '🔐 Jelszó Visszaállítás - Zedin Steam Manager'
+    message['Subject'] = 'Jelszó Visszaállítás - Zedin Steam Manager'
     message['From'] = os.getenv("SMTP_USER", "noreply@zedinmanager.com")
     message['To'] = email
     
