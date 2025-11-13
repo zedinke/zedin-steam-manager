@@ -62,6 +62,14 @@ function SimpleLogin({ onLoginSuccess }: { onLoginSuccess: (email: string, token
         })
       });
 
+      // Check content type before parsing
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('❌ Invalid response type:', contentType, text.substring(0, 200));
+        throw new Error('A szerver nem elérhető vagy nem válaszol megfelelően. Ellenőrizd, hogy a backend szolgáltatás fut-e.');
+      }
+
       const data = await response.json();
 
       if (!response.ok) {
