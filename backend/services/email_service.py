@@ -411,7 +411,7 @@ async def send_token_email(email: str, username: str, token_code: str, duration_
                             <p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">
                                 <strong>Zedin Steam Manager</strong> - Token Kezelés
                             </p>
-                            <p style="margin: 0 0 10px 0; color: #999; font-size: 12px;">
+                            <p style="margin: 0; color: #999; font-size: 12px;">
                                 Ez egy automatikus email. Kérjük, ne válaszolj rá.
                             </p>
                             <p style="margin: 0; color: #dc3545; font-size: 12px; font-weight: bold;">
@@ -672,7 +672,7 @@ async def send_password_reset_email(email: str, username: str, reset_token: str)
     </table>
 </body>
 </html>
-    ")
+    """)
     
     html_content = html_template.render(
         username=username,
@@ -683,7 +683,7 @@ async def send_password_reset_email(email: str, username: str, reset_token: str)
     message['Subject'] = 'Jelszó Visszaállítás - Zedin Steam Manager'
     message['From'] = os.getenv("SMTP_USER", "noreply@zedinmanager.com")
     message['To'] = email
-            """
+    
     message.attach(MIMEText(html_content, 'html'))
     
     smtp_password = os.getenv("SMTP_PASSWORD")
