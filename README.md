@@ -143,38 +143,37 @@ The installer must be run as a regular user with sudo privileges because:
 - Proper file permissions are automatically set
 - Security policies prevent root service execution
 
-### 🚀 Quick Installation
+### 🚀 Installation
 
-#### Option 1: Simplified Installer (Recommended)
-```bash
-curl -sSL https://raw.githubusercontent.com/zedinke/zedin-steam-manager/main/install-simple.sh | bash
-```
-
-#### Option 2: Manual Installation  
-```bash
-git clone https://github.com/zedinke/zedin-steam-manager.git
-cd zedin-steam-manager
-chmod +x install-simple.sh
-sudo ./install-simple.sh
-```
-
-#### Option 3: Advanced Installation (Full Features)
+#### One-Command Installation
 ```bash
 curl -sSL https://raw.githubusercontent.com/zedinke/zedin-steam-manager/main/install.sh | bash
 ```
 
-### 🛠️ Production Deployment Issues?
-
-If you experience white screen or installation problems:
-
+#### Manual Installation  
 ```bash
-# Complete production fix
+git clone https://github.com/zedinke/zedin-steam-manager.git
+cd zedin-steam-manager
+chmod +x install.sh
+./install.sh
+```
+
+#### Installation Options
+The installer will ask which type of installation you want:
+- **Simple**: Fast deployment with minimal features (3-5 minutes)
+- **Full**: Complete installation with all features (10-15 minutes)
+
+### 🛠️ Production Issues?
+
+If you experience problems:
+```bash
+# Fix deployment issues
 sudo ./deploy-production.sh
 
-# Debug service issues  
+# Debug services  
 sudo ./debug-service.sh
 
-# Check installation guide
+# View troubleshooting guide
 cat PRODUCTION_FIX.md
 ```
 

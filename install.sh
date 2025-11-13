@@ -1,96 +1,70 @@
 ﻿#!/bin/bash
 
 # ============================================================================
-# Zedin Steam Manager - Linux Installation Script
-# For Ubuntu/Debian systems
+# Zedin Steam Manager - Universal Installation Script
+# Ubuntu/Debian systems - Choose your installation type
 # ============================================================================
 
-set -e
+# Load installation modules
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/install-modules.sh"
 
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
+# Pre-installation checks
+check_root
+check_os
 
-# Functions
-log() {
-    echo -e "${GREEN}[$(date '+%Y-%m-%d %H:%M:%S')] $1${NC}"
-}
-
-error() {
-    echo -e "${RED}[ERROR] $1${NC}"
-    exit 1
-}
-
-warning() {
-    echo -e "${YELLOW}[WARNING] $1${NC}"
-}
-
-info() {
-    echo -e "${BLUE}[INFO] $1${NC}"
-}
-
-# Check if running as root
-if [ "$EUID" -eq 0 ]; then
-    error "Please do not run this script as root. Use a regular user with sudo privileges."
-fi
-
-# Check OS
-if ! grep -E "(Ubuntu|Debian)" /etc/os-release > /dev/null 2>&1; then
-    error "This installer supports Ubuntu/Debian systems only."
-fi
-
-# Variables
-INSTALL_DIR="/opt/zedin-steam-manager"
-SERVICE_USER="zsmanager"
-LOG_DIR="/var/log/zedin"
-DATA_DIR="/var/lib/zedin"
-STEAMCMD_DIR="/opt/steamcmd"
-
+# Installation type selection
 echo "============================================================================"
-echo "                    Zedin Steam Manager Installer"
+echo "          🚀 Zedin Steam Manager - Universal Installer"
 echo "============================================================================"
 echo ""
-echo "This installer will:"
-echo "  1. Install system dependencies (Node.js, Python, SteamCMD)"
-echo "  2. Create dedicated user and directories"
-echo "  3. Install and configure the application"
-echo "  4. Set up systemd services"
-echo "  5. Configure firewall"
-echo "  6. Create backup system"
+echo "Choose your installation type:"
 echo ""
-echo -n "Continue with installation? (y/N): "
-read -r REPLY
+echo "1) 🚀 Simple Installation (Recommended)"
+echo "   • Fast deployment (3-5 minutes)" 
+echo "   • Pre-built frontend"
+echo "   • Essential features only"
+echo ""
+echo "2) 🔧 Full Installation (Advanced)"
+echo "   • Complete setup (10-15 minutes)"
+echo "   • All features and tools"
+echo "   • Development environment"
+echo ""
+echo -n "Select installation type (1/2): "
+read -r INSTALL_TYPE
 echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    exit 1
-fi
 
-# ============================================================================
-# PHASE 1: System Dependencies
-# ============================================================================
+case $INSTALL_TYPE in
+    1)
+        show_banner "SIMPLE INSTALLATION (Fast Deployment)"
+        log "⚡ Starting simple installation..."
+        ;;
+    2)
+        show_banner "FULL INSTALLATION (All Features)"
+        log "🚀 Starting full installation..."
+        ;;
+    *)
+        error "Invalid selection. Please run the installer again and choose 1 or 2."
+        ;;
+esac
 
-log "PHASE 1: Installing system dependencies..."
+# Common installation phases
+install_system_deps
+setup_user_dirs  
+download_app
+install_backend
+deploy_frontend
+create_config
+setup_services
+setup_nginx
+init_database
+start_services
 
-# Update system
-log "Updating system packages..."
-sudo apt update && sudo apt upgrade -y
+# Check final status
+check_status
+show_completion
 
-# Install basic dependencies
-log "Installing basic dependencies..."
-sudo apt install -y curl wget gnupg2 software-properties-common apt-transport-https \
-    ca-certificates git unzip tar htop nano vim screen tmux ufw fail2ban logrotate
-
-# Install Python 3.9+
-log "Installing Python..."
-sudo apt install -y python3 python3-pip python3-venv python3-dev build-essential
-
-# Install Node.js 18+
-log "Installing Node.js..."
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt-get install -y nodejs
+log "Installation completed successfully!"
 
 #!/bin/bash
 
