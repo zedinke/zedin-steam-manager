@@ -18,13 +18,30 @@ CREATE INDEX IF NOT EXISTS idx_email_verifications_expires_at ON public.email_ve
 -- Enable Row Level Security
 ALTER TABLE public.email_verifications ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies
-CREATE POLICY "Users can view their own verification tokens" ON public.email_verifications
-    FOR SELECT USING (auth.uid() = user_id);
+-- RLS Policies - Allow all operations for service role and anon
+CREATE POLICY "Allow service role full access" ON public.email_verifications
+    FOR ALL 
+    TO service_role
+    USING (true)
+    WITH CHECK (true);
 
-CREATE POLICY "Service role can manage all tokens" ON public.email_verifications
-    FOR ALL USING (auth.role() = 'service_role');
+CREATE POLICY "Allow anon to insert verification tokens" ON public.email_verifications
+    FOR INSERT 
+    TO anon
+    WITH CHECK (true);
+
+CREATE POLICY "Allow anon to select verification tokens" ON public.email_verifications
+    FOR SELECT 
+    TO anon
+    USING (true);
+
+CREATE POLICY "Allow authenticated users to manage their tokens" ON public.email_verifications
+    FOR ALL 
+    TO authenticated
+    USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
 
 -- Grant permissions
 GRANT ALL ON public.email_verifications TO service_role;
-GRANT SELECT ON public.email_verifications TO authenticated;
+GRANT ALL ON public.email_verifications TO anon;
+GRANT ALL ON public.email_verifications TO authenticated;
