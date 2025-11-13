@@ -264,14 +264,30 @@ async def send_verification_email(email: str, username: str, token: str):
     message.attach(MIMEText(html_content, "html"))
     
     # Send email
+    smtp_password = os.getenv("SMTP_PASSWORD")
+    
+    # Check if SMTP is configured
+    if not smtp_password or smtp_password == "change_me_in_production":
+        # Development mode - just print the verification URL
+        print("\n" + "="*80)
+        print("📧 EMAIL VERIFICATION (Development Mode)")
+        print("="*80)
+        print(f"To: {email}")
+        print(f"Username: {username}")
+        print(f"Verification URL: {verification_url}")
+        print("="*80 + "\n")
+        return
+    
     try:
         await aiosmtplib.send(
             message,
             hostname=os.getenv("SMTP_HOST", "smtp.gmail.com"),
             port=int(os.getenv("SMTP_PORT", 587)),
             username=os.getenv("SMTP_USER"),
-            password=os.getenv("SMTP_PASSWORD"),
+            password=smtp_password,
             start_tls=True
         )
+        print(f"✅ Email sent successfully to {email}")
     except Exception as e:
-        print(f"Failed to send email: {e}")
+        print(f"❌ Failed to send email: {e}")
+        print(f"📧 Verification URL: {verification_url}")
