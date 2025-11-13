@@ -77,17 +77,22 @@ async def verify_email(request: VerifyEmailRequest):
     supabase = get_supabase()
     
     try:
-        # Find verification token
+        # Find verification token (check if exists and not expired)
         result = supabase.table("email_verifications")\
             .select("*")\
             .eq("token", request.token)\
-            .gt("expires_at", datetime.utcnow().isoformat())\
             .execute()
         
-        if not result.data:
+        if not result.data or len(result.data) == 0:
             raise HTTPException(status_code=400, detail="Invalid or expired verification token")
         
         verification = result.data[0]
+        
+        # Check if token is expired
+        expires_at = datetime.fromisoformat(verification["expires_at"].replace('Z', '+00:00'))
+        if expires_at < datetime.utcnow().replace(tzinfo=expires_at.tzinfo):
+            raise HTTPException(status_code=400, detail="Verification token has expired")
+        
         user_id = verification["user_id"]
         
         # Delete verification token (marks as verified)
