@@ -14,6 +14,9 @@ NC='\033[0m'
 # Global variables
 INSTALL_DIR="/opt/zedin-steam-manager"
 SERVICE_USER="zsmanager"
+STEAMCMD_DIR="/opt/steamcmd"
+LOG_DIR="/var/log/zedin"
+DATA_DIR="/var/lib/zedin"
 GITHUB_REPO="https://github.com/zedinke/zedin-steam-manager.git"
 
 # Logging functions
@@ -100,8 +103,9 @@ install_system_deps() {
     sudo apt autoremove -y
     sudo apt autoclean
     
-    # Install Node.js from NodeSource
-    curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+    # Install Node.js from NodeSource (LTS version)
+    log "Installing Node.js 20.x LTS..."
+    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
     sudo apt install -y nodejs
     
     # Verify installations
@@ -112,8 +116,8 @@ install_system_deps() {
         error "Python 3.9+ required. Current version: $PYTHON_VERSION"
     fi
     
-    if [ "$NODE_VERSION" -lt 18 ]; then
-        error "Node.js 18+ required. Current version: $(node --version)"
+    if [ "$NODE_VERSION" -lt 20 ]; then
+        error "Node.js 20+ required. Current version: $(node --version)"
     fi
     
     log "✅ Python $PYTHON_VERSION and Node.js $(node --version) installed successfully"
