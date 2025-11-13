@@ -692,7 +692,7 @@ async def send_password_reset_email(email: str, username: str, reset_token: str)
     message['Subject'] = 'Jelszó Visszaállítás - Zedin Steam Manager'
     message['From'] = os.getenv("SMTP_USER", "noreply@zedinmanager.com")
     message['To'] = email
-        """
+            """
     message.attach(MIMEText(html_content, 'html'))
     
     smtp_password = os.getenv("SMTP_PASSWORD")
