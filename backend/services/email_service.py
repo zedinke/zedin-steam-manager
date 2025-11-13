@@ -3,6 +3,27 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
 from jinja2 import Template
+import os
+
+def _log_dev_email(log_message: str, file_path: str, file_content: str):
+    """Helper to log email content in development mode."""
+    print(log_message, flush=True)
+    
+    # Correctly determine the project root and create the log path
+    # Assuming this script is in backend/services, so we go up two levels
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+    log_file_path = os.path.join(project_root, file_path)
+    log_dir = os.path.dirname(log_file_path)
+
+    try:
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+            
+        with open(log_file_path, "a") as f:
+            f.write(file_content)
+    except IOError as e:
+        print(f"Could not write to log file {log_file_path}: {e}", flush=True)
+
 
 async def send_verification_email(email: str, username: str, token: str):
     """Send email verification"""
@@ -247,7 +268,7 @@ async def send_verification_email(email: str, username: str, token: str):
         </div>
     </body>
     </html>
-    """)
+    ")
     
     html_content = html_template.render(
         username=username, 
@@ -268,7 +289,6 @@ async def send_verification_email(email: str, username: str, token: str):
     
     # Check if SMTP is configured
     if not smtp_password or smtp_password == "change_me_in_production":
-        # Development mode - write verification URL to file and log
         log_message = f"""
 {'='*80}
 📧 EMAIL VERIFICATION (Development Mode)
@@ -278,14 +298,11 @@ Username: {username}
 Verification URL: {verification_url}
 {'='*80}
 """
-        print(log_message, flush=True)
-        
-        # Also write to file for easier access
-        try:
-            with open("/tmp/verification_urls.txt", "a") as f:
-                f.write(f"{email}: {verification_url}\n")
-        except:
-            pass
+        _log_dev_email(
+            log_message,
+            file_path="logs/verification_urls.txt",
+            file_content=f"{email}: {verification_url}\n"
+        )
         return
     
     try:
@@ -308,7 +325,7 @@ async def send_token_email(email: str, username: str, token_code: str, duration_
     frontend_url = os.getenv("FRONTEND_URL", "http://localhost")
     activation_url = f"{frontend_url}/tokens/activate"
     
-    html_content = f"""
+    html_template = Template("""
 <!DOCTYPE html>
 <html lang="hu">
 <head>
@@ -334,7 +351,7 @@ async def send_token_email(email: str, username: str, token_code: str, duration_
                     <tr>
                         <td style="padding: 40px 30px;">
                             <h2 style="margin: 0 0 20px 0; color: #333; font-size: 24px;">
-                                Üdv {username}! 🎉
+                                Üdv {{ username }}! 🎉
                             </h2>
                             <p style="margin: 0 0 20px 0; color: #666; font-size: 16px; line-height: 1.6;">
                                 Generáltunk neked egy <strong>Server Admin</strong> tokent! 
@@ -345,14 +362,14 @@ async def send_token_email(email: str, username: str, token_code: str, duration_
                                     Token Kód
                                 </p>
                                 <p style="margin: 0; color: white; font-size: 24px; font-weight: bold; font-family: 'Courier New', monospace; letter-spacing: 1px; word-break: break-all;">
-                                    {token_code}
+                                    {{ token_code }}
                                 </p>
                             </div>
                             <table role="presentation" style="width: 100%; margin: 30px 0; background: #f8f9fa; border-radius: 12px; overflow: hidden;">
                                 <tr>
                                     <td style="padding: 20px; border-bottom: 1px solid #e9ecef;">
                                         <p style="margin: 0; color: #666; font-size: 14px;">⏱️ <strong>Érvényesség:</strong></p>
-                                        <p style="margin: 5px 0 0 0; color: #333; font-size: 16px;">{duration_days} nap</p>
+                                        <p style="margin: 5px 0 0 0; color: #333; font-size: 16px;">{{ duration_days }} nap</p>
                                     </td>
                                 </tr>
                                 <tr>
@@ -365,7 +382,7 @@ async def send_token_email(email: str, username: str, token_code: str, duration_
                             <table role="presentation" style="margin: 30px 0; width: 100%;">
                                 <tr>
                                     <td style="text-align: center;">
-                                        <a href="{activation_url}" 
+                                        <a href="{{ activation_url }}" 
                                            style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
                                             🚀 Token Aktiválása
                                         </a>
@@ -405,7 +422,14 @@ async def send_token_email(email: str, username: str, token_code: str, duration_
     </table>
 </body>
 </html>
-    """
+    """)
+
+    html_content = html_template.render(
+        username=username,
+        token_code=token_code,
+        duration_days=duration_days,
+        activation_url=activation_url
+    )
     
     message = MIMEMultipart('alternative')
     message['Subject'] = '🎟️ Server Admin Token Generálva - Zedin Steam Manager'
@@ -438,7 +462,7 @@ async def send_expiry_notification(email: str, username: str, token_code: str, d
     """Send token expiry notification email"""
     frontend_url = os.getenv("FRONTEND_URL", "http://localhost")
     
-    html_content = f"""
+    html_template = Template("""
 <!DOCTYPE html>
 <html lang="hu">
 <head>
@@ -464,7 +488,7 @@ async def send_expiry_notification(email: str, username: str, token_code: str, d
                     <tr>
                         <td style="padding: 40px 30px;">
                             <h2 style="margin: 0 0 20px 0; color: #333; font-size: 24px;">
-                                Üdv {username}!
+                                Üdv {{ username }}!
                             </h2>
                             <p style="margin: 0 0 20px 0; color: #666; font-size: 16px; line-height: 1.6;">
                                 A <strong>Server Admin</strong> tokened hamarosan lejár! 
@@ -475,7 +499,7 @@ async def send_expiry_notification(email: str, username: str, token_code: str, d
                                     Hátralévő Idő
                                 </p>
                                 <p style="margin: 0; color: white; font-size: 48px; font-weight: bold;">
-                                    {days_remaining}
+                                    {{ days_remaining }}
                                 </p>
                                 <p style="margin: 10px 0 0 0; color: white; font-size: 18px;">
                                     nap
@@ -486,7 +510,7 @@ async def send_expiry_notification(email: str, username: str, token_code: str, d
                                     🎟️ <strong>Token Kód:</strong>
                                 </p>
                                 <p style="margin: 0; color: #333; font-size: 16px; font-family: 'Courier New', monospace; word-break: break-all;">
-                                    {token_code}
+                                    {{ token_code }}
                                 </p>
                             </div>
                             <div style="background: #d1ecf1; border-left: 4px solid #0c5460; padding: 20px; border-radius: 8px; margin: 30px 0;">
@@ -502,7 +526,7 @@ async def send_expiry_notification(email: str, username: str, token_code: str, d
                             <table role="presentation" style="margin: 30px 0; width: 100%;">
                                 <tr>
                                     <td style="text-align: center;">
-                                        <a href="{frontend_url}/dashboard" 
+                                        <a href="{{ frontend_url }}/dashboard" 
                                            style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
                                             📊 Dashboard Megnyitása
                                         </a>
@@ -527,7 +551,14 @@ async def send_expiry_notification(email: str, username: str, token_code: str, d
     </table>
 </body>
 </html>
-    """
+    ")
+
+    html_content = html_template.render(
+        username=username,
+        token_code=token_code,
+        days_remaining=days_remaining,
+        frontend_url=frontend_url
+    )
     
     message = MIMEMultipart('alternative')
     message['Subject'] = f'⚠️ Token Lejárat ({days_remaining} nap) - Zedin Steam Manager'
@@ -561,7 +592,7 @@ async def send_password_reset_email(email: str, username: str, reset_token: str)
     frontend_url = os.getenv("FRONTEND_URL", "http://localhost")
     reset_url = f"{frontend_url}/reset-password?token={reset_token}"
     
-    html_content = f"""
+    html_template = Template("""
 <!DOCTYPE html>
 <html lang="hu">
 <head>
@@ -587,7 +618,7 @@ async def send_password_reset_email(email: str, username: str, reset_token: str)
                     <tr>
                         <td style="padding: 40px 30px;">
                             <h2 style="margin: 0 0 20px 0; color: #333; font-size: 24px;">
-                                Üdv {username}!
+                                Üdv {{ username }}!
                             </h2>
                             <p style="margin: 0 0 20px 0; color: #666; font-size: 16px; line-height: 1.6;">
                                 Jelszó visszaállítást kértél a <strong>Zedin Steam Manager</strong> fiókodhoz. 
@@ -607,7 +638,7 @@ async def send_password_reset_email(email: str, username: str, reset_token: str)
                             <table role="presentation" style="margin: 30px 0; width: 100%;">
                                 <tr>
                                     <td style="text-align: center;">
-                                        <a href="{reset_url}" 
+                                        <a href="{{ reset_url }}" 
                                            style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
                                             🔑 Jelszó Visszaállítása
                                         </a>
@@ -619,7 +650,7 @@ async def send_password_reset_email(email: str, username: str, reset_token: str)
                                     Ha a gomb nem működik, másold be ezt a linket a böngésződbe:
                                 </p>
                                 <p style="margin: 0; color: #667eea; font-size: 13px; word-break: break-all; font-family: 'Courier New', monospace;">
-                                    {reset_url}
+                                    {{ reset_url }}
                                 </p>
                             </div>
                             <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 8px; margin: 30px 0;">
@@ -660,7 +691,12 @@ async def send_password_reset_email(email: str, username: str, reset_token: str)
     </table>
 </body>
 </html>
-    """
+    ")
+    
+    html_content = html_template.render(
+        username=username,
+        reset_url=reset_url
+    )
     
     message = MIMEMultipart('alternative')
     message['Subject'] = '🔐 Jelszó Visszaállítás - Zedin Steam Manager'
@@ -672,12 +708,19 @@ async def send_password_reset_email(email: str, username: str, reset_token: str)
     smtp_password = os.getenv("SMTP_PASSWORD")
     
     if not smtp_password or smtp_password == "change_me_in_production":
-        print(f"📧 PASSWORD RESET EMAIL (Dev Mode) - {email}: {reset_url}", flush=True)
-        try:
-            with open("/tmp/password_reset_urls.txt", "a") as f:
-                f.write(f"{email}: {reset_url}\n")
-        except:
-            pass
+        log_message = f"""
+{'='*80}
+📧 PASSWORD RESET EMAIL (Development Mode)
+{'='*80}
+To: {email}
+Reset URL: {reset_url}
+{'='*80}
+"""
+        _log_dev_email(
+            log_message,
+            file_path="logs/password_reset_urls.txt",
+            file_content=f"{email}: {reset_url}\n"
+        )
         return
     
     try:

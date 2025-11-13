@@ -177,16 +177,26 @@ async def forgot_password(request: ForgotPasswordRequest, background_tasks: Back
     supabase = get_supabase()
     
     try:
-        # Check if user exists
-        users = supabase.table("users").select("id, email, username").eq("email", request.email).execute()
+        # Check if user exists using the admin API.
+        # Note: list_users() can be slow with many users, but it's a reliable way
+        # to find a user by email with the service_role key.
+        all_users_response = supabase.auth.admin.list_users()
+        user_list = all_users_response.users
         
-        if not users.data or len(users.data) == 0:
+        user_found = next((u for u in user_list if u.email == request.email), None)
+        
+        if not user_found:
             # Don't reveal if user exists or not for security
             return {
                 "message": "If the email exists, a password reset link has been sent."
             }
         
-        user = users.data[0]
+        # Adapt the found user object to the dictionary format the rest of the function expects.
+        user = {
+            "id": user_found.id,
+            "email": user_found.email,
+            "username": user_found.user_metadata.get("username", "user")
+        }
         
         # Generate reset token
         reset_token = secrets.token_urlsafe(32)
