@@ -29,24 +29,31 @@ def create_access_token(data: dict):
 
 @router.post("/register")
 async def register(request: RegisterRequest, background_tasks: BackgroundTasks):
-    """Register new user with email verification"""
+    """Register new user with email verification (custom email only)"""
     supabase = get_supabase()
     
     try:
-        # Create user in Supabase Auth
-        response = supabase.auth.sign_up({
+        # Use admin API to create user without sending Supabase's email
+        # This requires SUPABASE_SERVICE_KEY instead of anon key
+        from supabase import create_client
+        
+        service_url = os.getenv("SUPABASE_URL")
+        service_key = os.getenv("SUPABASE_SERVICE_KEY", os.getenv("SUPABASE_KEY"))
+        service_client = create_client(service_url, service_key)
+        
+        # Create user with admin client (no auto-email)
+        response = service_client.auth.admin.create_user({
             "email": request.email,
             "password": request.password,
-            "options": {
-                "data": {
-                    "username": request.username,
-                    "email_verified": False
-                }
+            "email_confirm": False,  # Don't send Supabase confirmation email
+            "user_metadata": {
+                "username": request.username,
+                "email_verified": False
             }
         })
         
         if response.user:
-            # Generate verification token
+            # Generate our own verification token
             verification_token = secrets.token_urlsafe(32)
             
             # Store token in database
@@ -56,7 +63,7 @@ async def register(request: RegisterRequest, background_tasks: BackgroundTasks):
                 "expires_at": (datetime.utcnow() + timedelta(hours=24)).isoformat()
             }).execute()
             
-            # Send verification email in background
+            # Send our custom verification email in background
             background_tasks.add_task(
                 send_verification_email,
                 request.email,
