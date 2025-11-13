@@ -290,14 +290,15 @@ async def send_verification_email(email: str, username: str, token: str):
     # Check if SMTP is configured
     if not smtp_password or smtp_password == "change_me_in_production":
         log_message = f"""
-{'='*80}
-📧 EMAIL VERIFICATION (Development Mode)
-{'='*80}
-To: {email}
-Username: {username}
-Verification URL: {verification_url}
-{'='*80}
-"""
+    {'='*80}
+    # 📧 EMAIL VERIFICATION (Development Mode)
+    EMAIL VERIFICATION (Development Mode)
+    {'='*80}
+    To: {email}
+    Username: {username}
+    Verification URL: {verification_url}
+    {'='*80}
+    """
         _log_dev_email(
             log_message,
             file_path="logs/verification_urls.txt",
@@ -341,7 +342,7 @@ async def send_token_email(email: str, username: str, token_code: str, duration_
                     <tr>
                         <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
                             <h1 style="margin: 0; color: white; font-size: 28px; font-weight: bold;">
-                                🎟️ Új Token Generálva
+                                Uj Token Generálva
                             </h1>
                             <p style="margin: 10px 0 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">
                                 Zedin Steam Manager
