@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   Container, Paper, Typography, Box, Button, Grid,
   AppBar, Toolbar, IconButton, Card, CardContent,
-  Alert, CircularProgress, Chip, Backdrop, LinearProgress
+  Alert, CircularProgress, Chip
 } from '@mui/material'
 import LogoutIcon from '@mui/icons-material/Logout'
 import UpdateIcon from '@mui/icons-material/Update'
@@ -40,33 +40,11 @@ export default function DashboardPage() {
     setUpdating(true)
 
     try {
+      // Redirect to static updating page immediately
+      window.location.href = '/updating.html';
+      
       // Start the update process
       await api.post('/dashboard/git-update')
-      
-      // Wait for services to restart (5 seconds)
-      await new Promise(resolve => setTimeout(resolve, 5000))
-      
-      // Poll backend health until it's back online
-      let attempts = 0
-      const maxAttempts = 20 // 20 seconds max
-      
-      while (attempts < maxAttempts) {
-        try {
-          await api.get('/health')
-          // Backend is back online, reload the page
-          window.location.reload()
-          return
-        } catch {
-          // Backend still restarting, wait 1 second
-          await new Promise(resolve => setTimeout(resolve, 1000))
-          attempts++
-        }
-      }
-      
-      // If we get here, backend didn't come back online
-      setMessage('Update completed but services are taking longer to restart. Please refresh manually.')
-      setUpdating(false)
-      
     } catch (err: any) {
       setMessage(err.response?.data?.detail || 'Update failed')
       setUpdating(false)
@@ -81,26 +59,6 @@ export default function DashboardPage() {
 
   return (
     <Box>
-      {/* Loading Overlay */}
-      <Backdrop
-        open={updating}
-        sx={{
-          color: '#fff',
-          zIndex: (theme) => theme.zIndex.drawer + 1,
-          flexDirection: 'column',
-          gap: 2
-        }}
-      >
-        <CircularProgress size={60} color="inherit" />
-        <Typography variant="h6">Frissítés folyamatban...</Typography>
-        <Typography variant="body2">
-          A rendszer frissül és újraindul. Kérlek várj!
-        </Typography>
-        <Box sx={{ width: '300px', mt: 2 }}>
-          <LinearProgress />
-        </Box>
-      </Backdrop>
-
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
