@@ -56,6 +56,10 @@ show_banner() {
     echo ""
     echo "Installation Mode: $1"
     echo ""
+}
+
+# Confirm installation
+confirm_installation() {
     echo "This installer will:"
     echo "  • Install system dependencies"
     echo "  • Set up user and directories"  
@@ -67,15 +71,64 @@ show_banner() {
     read -r REPLY
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        log "Installation cancelled by user"
         exit 1
     fi
 }
 
 # Install system dependencies
 install_system_deps() {
-    log "Installing system dependencies..."
+    log "PHASE 1: Installing system dependencies..."
+    
+    # Update system
+    log "Updating system packages..."
     sudo apt update && sudo apt upgrade -y
-    sudo apt install -y curl wget git python3 python3-pip python3-venv nginx
+    
+    # Install basic dependencies
+    log "Installing basic dependencies..."
+    sudo apt install -y curl wget gnupg2 software-properties-common apt-transport-https \
+        ca-certificates git unzip tar htop nano vim screen tmux ufw fail2ban logrotate \
+        build-essential
+    
+    # Install Python 3.9+
+    log "Installing Python..."
+    sudo apt install -y python3 python3-pip python3-venv python3-dev
+    
+    # Fix Node.js conflicts and install clean version
+    log "Installing Node.js (fixing conflicts)..."
+    sudo apt remove --purge nodejs npm -y 2>/dev/null || true
+    sudo apt autoremove -y
+    sudo apt autoclean
+    
+    # Install Node.js from NodeSource
+    curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+    sudo apt install -y nodejs
+    
+    # Verify installations
+    PYTHON_VERSION=$(python3 --version | grep -oE '[0-9]+\.[0-9]+' | head -1)
+    NODE_VERSION=$(node --version | grep -oE '[0-9]+' | head -1)
+    
+    if [ "$(printf '%s\n' "3.9" "$PYTHON_VERSION" | sort -V | head -n1)" != "3.9" ]; then
+        error "Python 3.9+ required. Current version: $PYTHON_VERSION"
+    fi
+    
+    if [ "$NODE_VERSION" -lt 18 ]; then
+        error "Node.js 18+ required. Current version: $(node --version)"
+    fi
+    
+    log "✅ Python $PYTHON_VERSION and Node.js $(node --version) installed successfully"
+    
+    # Install Nginx
+    log "Installing Nginx..."
+    sudo apt install -y nginx
+    
+    # Check if nginx is already running
+    if sudo systemctl is-active --quiet nginx; then
+        log "Nginx is already running - stopping it temporarily for configuration"
+        sudo systemctl stop nginx
+    fi
+    
+    install_steamcmd
     log "✅ System dependencies installed"
 }
 
