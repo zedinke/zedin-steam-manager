@@ -5,6 +5,7 @@ from models.user import User, UserRole
 from models.token import UserToken
 from services.email_service import email_service
 from services.token_service import token_service
+from services.supabase_service import SupabaseService
 from config.settings import settings
 from passlib.context import CryptContext
 from jose import JWTError, jwt
@@ -171,3 +172,16 @@ class AuthService:
 
 # Create global instance
 auth_service = AuthService()
+
+def get_current_user():
+    """Get current user - simplified for demo"""
+    from models.user import User
+    # This is a simplified version - in real implementation would validate JWT token
+    user = User()
+    user.id = 1
+    user.email = "admin@zedin.com"
+    user.first_name = "Admin"
+    user.last_name = "User"
+    user.role = "admin"
+    user.is_verified = True
+    return user

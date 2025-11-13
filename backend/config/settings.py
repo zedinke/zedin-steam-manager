@@ -13,6 +13,12 @@ class Settings(BaseSettings):
     
     # Database
     DATABASE_URL: str = "sqlite:///./zedin_steam_manager.db"
+    TEST_DATABASE_URL: str = "sqlite:///./test_zedin_steam_manager.db"
+    
+    # Supabase API Configuration
+    SUPABASE_URL: str = ""
+    SUPABASE_SERVICE_ROLE_KEY: str = ""
+    SUPABASE_ANON_KEY: str = ""
     
     # Security
     SECRET_KEY: str = "zedin-steam-manager-secret-key-change-in-production"
@@ -53,6 +59,12 @@ class Settings(BaseSettings):
     EMAIL_SENDER: str = "noreply@zedinsteammanager.com"
     EMAIL_PASSWORD: str = "your_app_password_here"  # Gmail App Password
     EMAIL_ENABLED: bool = False  # Set to True when email is configured
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str = "your_email@gmail.com"
+    SMTP_PASSWORD: str = "your_app_password"
+    EMAIL_FROM: str = "your_email@gmail.com"
+    ENVIRONMENT: str = "development"
     
     # External Database (PlanetScale/Supabase/Neon)
     EXTERNAL_DATABASE_URL: str = ""  # Set this for external database
@@ -60,6 +72,7 @@ class Settings(BaseSettings):
     
     class Config:
         env_file = ".env"
+        extra = "allow"  # Allow extra fields from .env
 
 # Create settings instance
 settings = Settings()
