@@ -129,7 +129,7 @@ export default function DashboardPage() {
                 <Typography variant="h6">System Information</Typography>
                 <Box sx={{ mt: 2 }}>
                   <Typography variant="body2" color="text.secondary">
-                    Version: 0.0.2-test
+                    Version: 0.0.3-final
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Module: 1 (Installation & Base System)
