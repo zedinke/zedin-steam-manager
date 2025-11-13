@@ -50,3 +50,18 @@ echo "2. Copy backend/.env.example to backend/.env and fill in your credentials"
 echo "3. Run: python backend/init_db.py (to create database tables)"
 echo "4. Run: ./start-dev.sh (to start both backend and frontend)"
 echo ""
+echo "Or use setup-env.sh for automatic configuration"
+echo ""
+
+# Ask if user wants to start now
+read -p "Do you want to start the application now? (yes/no): " start_now
+if [ "$start_now" = "yes" ]; then
+    if [ -f "backend/.env" ]; then
+        echo ""
+        echo "Starting Zedin Steam Manager..."
+        bash start-dev.sh
+    else
+        echo ""
+        echo "⚠️  backend/.env not found! Run setup-env.sh first."
+    fi
+fi

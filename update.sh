@@ -73,6 +73,8 @@ echo "======================================"
 echo "✅ Update completed successfully!"
 echo "======================================"
 echo ""
-echo "To start the application, run:"
-echo "  ./start-dev.sh"
-echo ""
+echo "Starting services automatically in 3 seconds..."
+echo "Press Ctrl+C to cancel..."
+sleep 3
+
+bash start-dev.sh
