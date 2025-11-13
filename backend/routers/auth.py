@@ -29,26 +29,19 @@ def create_access_token(data: dict):
 
 @router.post("/register")
 async def register(request: RegisterRequest, background_tasks: BackgroundTasks):
-    """Register new user with email verification (custom email only)"""
+    """Register new user with custom email verification"""
     supabase = get_supabase()
     
     try:
-        # Use admin API to create user without sending Supabase's email
-        # This requires SUPABASE_SERVICE_KEY instead of anon key
-        from supabase import create_client
-        
-        service_url = os.getenv("SUPABASE_URL")
-        service_key = os.getenv("SUPABASE_SERVICE_KEY", os.getenv("SUPABASE_KEY"))
-        service_client = create_client(service_url, service_key)
-        
-        # Create user with admin client (no auto-email)
-        response = service_client.auth.admin.create_user({
+        # Simple sign up - Supabase email confirmation should be DISABLED in dashboard
+        response = supabase.auth.sign_up({
             "email": request.email,
             "password": request.password,
-            "email_confirm": False,  # Don't send Supabase confirmation email
-            "user_metadata": {
-                "username": request.username,
-                "email_verified": False
+            "options": {
+                "data": {
+                    "username": request.username,
+                    "email_verified": False
+                }
             }
         })
         
