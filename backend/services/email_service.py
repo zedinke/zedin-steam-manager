@@ -201,14 +201,14 @@ async def send_verification_email(email: str, username: str, token: str):
     <body>
         <div class="email-wrapper">
             <div class="header">
-                <div class="icon">🎮</div>
+                <div class="icon">GAME</div>
                 <h1>Zedin Steam Manager</h1>
                 <p>Professzionális Steam Szerver Menedzsment</p>
             </div>
             
             <div class="content">
                 <div class="greeting">
-                    Üdvözlünk, {{ username }}! 👋
+                    Üdvözlünk, {{ username }}!
                 </div>
                 
                 <div class="message">
@@ -221,17 +221,17 @@ async def send_verification_email(email: str, username: str, token: str):
 
                 <div class="features">
                     <div class="feature">
-                        <div class="feature-icon">⚡</div>
+                        <div class="feature-icon">[fast]</div>
                         <div class="feature-title">Gyors Telepítés</div>
                         <div class="feature-desc">Automatikus szerver setup</div>
                     </div>
                     <div class="feature">
-                        <div class="feature-icon">📊</div>
+                        <div class="feature-icon">[stats]</div>
                         <div class="feature-title">Valós idejű Monitorozás</div>
                         <div class="feature-desc">RAM, CPU, HDD köv etés</div>
                     </div>
                     <div class="feature">
-                        <div class="feature-icon">🔧</div>
+                        <div class="feature-icon">[tools]</div>
                         <div class="feature-title">RCON Kezelés</div>
                         <div class="feature-desc">Teljes szerver kontroll</div>
                     </div>
@@ -239,7 +239,7 @@ async def send_verification_email(email: str, username: str, token: str):
                 
                 <div class="button-container">
                     <a href="{{ verification_url }}" class="verify-button">
-                        ✉️ Email Megerősítése
+                        Email Megerősítése
                     </a>
                 </div>
                 
@@ -248,8 +248,8 @@ async def send_verification_email(email: str, username: str, token: str):
                     <a href="{{ verification_url }}">{{ verification_url }}</a>
                 </div>
                 
-                <div class="info-box">
-                    <p>⏱️ <strong>Fontos:</strong> Ez a link 24 órán belül lejár. Ha nem te regisztráltál, nyugodtan hagyd figyelmen kívül ezt az emailt.</p>
+                    <div class="info-box">
+                    <p><strong>Fontos:</strong> Ez a link 24 órán belül lejár. Ha nem te regisztráltál, nyugodtan hagyd figyelmen kívül ezt az emailt.</p>
                 </div>
             </div>
             
@@ -278,7 +278,7 @@ async def send_verification_email(email: str, username: str, token: str):
     
     # Create message
     message = MIMEMultipart("alternative")
-    message["Subject"] = "🎮 Email megerősítés - Zedin Steam Manager"
+    message["Subject"] = "Email megerősítés - Zedin Steam Manager"
     message["From"] = os.getenv("SMTP_USER", "noreply@zedinmanager.com")
     message["To"] = email
     
@@ -352,7 +352,7 @@ async def send_token_email(email: str, username: str, token_code: str, duration_
                     <tr>
                         <td style="padding: 40px 30px;">
                             <h2 style="margin: 0 0 20px 0; color: #333; font-size: 24px;">
-                                Üdv {{ username }}! 🎉
+                                Üdv {{ username }}!
                             </h2>
                             <p style="margin: 0 0 20px 0; color: #666; font-size: 16px; line-height: 1.6;">
                                 Generáltunk neked egy <strong>Server Admin</strong> tokent! 
@@ -385,21 +385,21 @@ async def send_token_email(email: str, username: str, token_code: str, duration_
                                     <td style="text-align: center;">
                                         <a href="{{ activation_url }}" 
                                            style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
-                                            🚀 Token Aktiválása
+                                            Token Aktiválása
                                         </a>
                                     </td>
                                 </tr>
                             </table>
                             <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 8px; margin: 30px 0;">
                                 <h3 style="margin: 0 0 15px 0; color: #856404; font-size: 16px;">
-                                    📝 Aktiválási Lépések
+                                    Aktiválási Lépések
                                 </h3>
                                 <ol style="margin: 0; padding-left: 20px; color: #856404; font-size: 14px; line-height: 1.8;">
                                     <li>Jelentkezz be a Zedin Steam Manager fiókodba</li>
                                     <li>Navigálj a "Token Aktiválás" menüpontba</li>
                                     <li>Másold be a fenti token kódot</li>
                                     <li>Kattints az "Aktiválás" gombra</li>
-                                    <li>Élvezd a Server Admin jogosultságokat! 🎮</li>
+                                    <li>Élvezd a Server Admin jogosultságokat!</li>
                                 </ol>
                             </div>
                         </td>
@@ -433,7 +433,7 @@ async def send_token_email(email: str, username: str, token_code: str, duration_
     )
     
     message = MIMEMultipart('alternative')
-    message['Subject'] = '🎟️ Server Admin Token Generálva - Zedin Steam Manager'
+    message['Subject'] = 'Server Admin Token Generálva - Zedin Steam Manager'
     message['From'] = os.getenv("SMTP_USER", "noreply@zedinmanager.com")
     message['To'] = email
     
@@ -442,7 +442,7 @@ async def send_token_email(email: str, username: str, token_code: str, duration_
     smtp_password = os.getenv("SMTP_PASSWORD")
     
     if not smtp_password or smtp_password == "change_me_in_production":
-        print(f"📧 TOKEN EMAIL (Dev Mode) - {email}: {token_code}", flush=True)
+        print(f"TOKEN EMAIL (Dev Mode) - {email}: {token_code}", flush=True)
         return
     
     try:
@@ -478,9 +478,9 @@ async def send_expiry_notification(email: str, username: str, token_code: str, d
                 <table role="presentation" style="max-width: 600px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden;">
                     <tr>
                         <td style="background: linear-gradient(135deg, #ff9966 0%, #ff5e62 100%); padding: 40px 30px; text-align: center;">
-                            <h1 style="margin: 0; color: white; font-size: 28px; font-weight: bold;">
-                                ⚠️ Token Lejárat
-                            </h1>
+                                <h1 style="margin: 0; color: white; font-size: 28px; font-weight: bold;">
+                                    Token Lejárat
+                                </h1>
                             <p style="margin: 10px 0 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">
                                 Zedin Steam Manager
                             </p>
@@ -508,7 +508,7 @@ async def send_expiry_notification(email: str, username: str, token_code: str, d
                             </div>
                             <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin: 30px 0;">
                                 <p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">
-                                    🎟️ <strong>Token Kód:</strong>
+                                        <strong>Token Kód:</strong>
                                 </p>
                                 <p style="margin: 0; color: #333; font-size: 16px; font-family: 'Courier New', monospace; word-break: break-all;">
                                     {{ token_code }}
@@ -516,7 +516,7 @@ async def send_expiry_notification(email: str, username: str, token_code: str, d
                             </div>
                             <div style="background: #d1ecf1; border-left: 4px solid #0c5460; padding: 20px; border-radius: 8px; margin: 30px 0;">
                                 <h3 style="margin: 0 0 15px 0; color: #0c5460; font-size: 16px;">
-                                    📋 Következő Lépések
+                                        Következő Lépések
                                 </h3>
                                 <ul style="margin: 0; padding-left: 20px; color: #0c5460; font-size: 14px; line-height: 1.8;">
                                     <li>Lépj kapcsolatba egy Manager Admin-nal</li>
@@ -562,7 +562,7 @@ async def send_expiry_notification(email: str, username: str, token_code: str, d
     )
     
     message = MIMEMultipart('alternative')
-    message['Subject'] = f'⚠️ Token Lejárat ({days_remaining} nap) - Zedin Steam Manager'
+    message['Subject'] = f'Token Lejárat ({days_remaining} nap) - Zedin Steam Manager'
     message['From'] = os.getenv("SMTP_USER", "noreply@zedinmanager.com")
     message['To'] = email
     
