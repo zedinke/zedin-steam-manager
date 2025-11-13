@@ -554,3 +554,142 @@ async def send_expiry_notification(email: str, username: str, token_code: str, d
         print(f"✅ Expiry notification sent to {email}", flush=True)
     except Exception as e:
         print(f"❌ Failed to send expiry notification: {e}", flush=True)
+
+
+async def send_password_reset_email(email: str, username: str, reset_token: str):
+    """Send password reset email"""
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost")
+    reset_url = f"{frontend_url}/reset-password?token={reset_token}"
+    
+    html_content = f"""
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jelszó Visszaállítás - Zedin Steam Manager</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td style="padding: 40px 20px;">
+                <table role="presentation" style="max-width: 600px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden;">
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); padding: 40px 30px; text-align: center;">
+                            <h1 style="margin: 0; color: white; font-size: 28px; font-weight: bold;">
+                                🔐 Jelszó Visszaállítás
+                            </h1>
+                            <p style="margin: 10px 0 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">
+                                Zedin Steam Manager
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 40px 30px;">
+                            <h2 style="margin: 0 0 20px 0; color: #333; font-size: 24px;">
+                                Üdv {username}!
+                            </h2>
+                            <p style="margin: 0 0 20px 0; color: #666; font-size: 16px; line-height: 1.6;">
+                                Jelszó visszaállítást kértél a <strong>Zedin Steam Manager</strong> fiókodhoz. 
+                                Ha nem te voltál, nyugodtan hagyd figyelmen kívül ezt az emailt.
+                            </p>
+                            <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); padding: 30px; border-radius: 15px; margin: 30px 0; text-align: center; box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);">
+                                <p style="margin: 0 0 10px 0; color: white; font-size: 14px; text-transform: uppercase; letter-spacing: 2px;">
+                                    ⏱️ Érvényesség
+                                </p>
+                                <p style="margin: 0; color: white; font-size: 48px; font-weight: bold;">
+                                    1
+                                </p>
+                                <p style="margin: 10px 0 0 0; color: white; font-size: 18px;">
+                                    óra
+                                </p>
+                            </div>
+                            <table role="presentation" style="margin: 30px 0; width: 100%;">
+                                <tr>
+                                    <td style="text-align: center;">
+                                        <a href="{reset_url}" 
+                                           style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+                                            🔑 Jelszó Visszaállítása
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <div style="background: #f8f9fa; border: 2px dashed #dee2e6; padding: 20px; border-radius: 12px; margin: 30px 0;">
+                                <p style="margin: 0 0 10px 0; color: #666; font-size: 13px;">
+                                    Ha a gomb nem működik, másold be ezt a linket a böngésződbe:
+                                </p>
+                                <p style="margin: 0; color: #667eea; font-size: 13px; word-break: break-all; font-family: 'Courier New', monospace;">
+                                    {reset_url}
+                                </p>
+                            </div>
+                            <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 8px; margin: 30px 0;">
+                                <h3 style="margin: 0 0 15px 0; color: #856404; font-size: 16px;">
+                                    ⚠️ Biztonsági Megjegyzés
+                                </h3>
+                                <ul style="margin: 0; padding-left: 20px; color: #856404; font-size: 14px; line-height: 1.8;">
+                                    <li>Ez a link 1 órán belül lejár</li>
+                                    <li>Csak egyszer használható</li>
+                                    <li>Ha nem te kérted, hagyd figyelmen kívül ezt az emailt</li>
+                                    <li>Soha ne oszd meg ezt a linket senkivel</li>
+                                </ul>
+                            </div>
+                            <div style="background: #d1ecf1; border-left: 4px solid #0c5460; padding: 20px; border-radius: 8px; margin: 30px 0;">
+                                <p style="margin: 0; color: #0c5460; font-size: 14px; line-height: 1.6;">
+                                    <strong>💡 Tipp:</strong> Válassz erős jelszót, amely tartalmaz kisbetűket, 
+                                    nagybetűket, számokat és speciális karaktereket.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e9ecef;">
+                            <p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">
+                                <strong>Zedin Steam Manager</strong> - Fiók Biztonság
+                            </p>
+                            <p style="margin: 0 0 10px 0; color: #999; font-size: 12px;">
+                                Ez egy automatikus email. Kérjük, ne válaszolj rá.
+                            </p>
+                            <p style="margin: 0; color: #dc3545; font-size: 12px; font-weight: bold;">
+                                🔒 Ha nem te kérted a visszaállítást, azonnal jelezz nekünk!
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+    """
+    
+    message = MIMEMultipart('alternative')
+    message['Subject'] = '🔐 Jelszó Visszaállítás - Zedin Steam Manager'
+    message['From'] = os.getenv("SMTP_USER", "noreply@zedinmanager.com")
+    message['To'] = email
+    
+    message.attach(MIMEText(html_content, 'html'))
+    
+    smtp_password = os.getenv("SMTP_PASSWORD")
+    
+    if not smtp_password or smtp_password == "change_me_in_production":
+        print(f"📧 PASSWORD RESET EMAIL (Dev Mode) - {email}: {reset_url}", flush=True)
+        try:
+            with open("/tmp/password_reset_urls.txt", "a") as f:
+                f.write(f"{email}: {reset_url}\n")
+        except:
+            pass
+        return
+    
+    try:
+        await aiosmtplib.send(
+            message,
+            hostname=os.getenv("SMTP_HOST", "smtp.gmail.com"),
+            port=int(os.getenv("SMTP_PORT", 587)),
+            username=os.getenv("SMTP_USER"),
+            password=smtp_password,
+            start_tls=True
+        )
+        print(f"✅ Password reset email sent to {email}", flush=True)
+    except Exception as e:
+        print(f"❌ Failed to send password reset email: {e}", flush=True)
+        print(f"🔗 Reset URL: {reset_url}", flush=True)

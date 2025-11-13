@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from jose import jwt
 import os
 from services.supabase_client import get_supabase
-from services.email_service import send_verification_email
+from services.email_service import send_verification_email, send_password_reset_email
 import secrets
 
 router = APIRouter()
@@ -20,6 +20,13 @@ class LoginRequest(BaseModel):
 
 class VerifyEmailRequest(BaseModel):
     token: str
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
 
 def create_access_token(data: dict):
     to_encode = data.copy()
@@ -163,3 +170,99 @@ async def login(request: LoginRequest):
 async def logout():
     """Logout user"""
     return {"message": "Logged out successfully"}
+
+@router.post("/forgot-password")
+async def forgot_password(request: ForgotPasswordRequest, background_tasks: BackgroundTasks):
+    """Send password reset email"""
+    supabase = get_supabase()
+    
+    try:
+        # Check if user exists
+        users = supabase.table("users").select("id, email, username").eq("email", request.email).execute()
+        
+        if not users.data or len(users.data) == 0:
+            # Don't reveal if user exists or not for security
+            return {
+                "message": "If the email exists, a password reset link has been sent."
+            }
+        
+        user = users.data[0]
+        
+        # Generate reset token
+        reset_token = secrets.token_urlsafe(32)
+        
+        # Store token in database (expires in 1 hour)
+        supabase.table("password_resets").insert({
+            "user_id": user["id"],
+            "token": reset_token,
+            "expires_at": (datetime.utcnow() + timedelta(hours=1)).isoformat()
+        }).execute()
+        
+        # Send password reset email in background
+        background_tasks.add_task(
+            send_password_reset_email,
+            user["email"],
+            user["username"],
+            reset_token
+        )
+        
+        return {
+            "message": "If the email exists, a password reset link has been sent."
+        }
+    except Exception as e:
+        # Don't reveal errors for security
+        return {
+            "message": "If the email exists, a password reset link has been sent."
+        }
+
+@router.post("/reset-password")
+async def reset_password(request: ResetPasswordRequest):
+    """Reset password with token"""
+    supabase = get_supabase()
+    
+    try:
+        # Find reset token
+        result = supabase.table("password_resets")\
+            .select("*")\
+            .eq("token", request.token)\
+            .execute()
+        
+        if not result.data or len(result.data) == 0:
+            raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+        
+        reset = result.data[0]
+        
+        # Check if token is expired
+        expires_at = datetime.fromisoformat(reset["expires_at"].replace('Z', '+00:00'))
+        if expires_at < datetime.utcnow().replace(tzinfo=expires_at.tzinfo):
+            raise HTTPException(status_code=400, detail="Reset token has expired")
+        
+        user_id = reset["user_id"]
+        
+        # Get user email for Supabase auth update
+        user_result = supabase.table("users").select("email").eq("id", user_id).execute()
+        if not user_result.data:
+            raise HTTPException(status_code=400, detail="User not found")
+        
+        user_email = user_result.data[0]["email"]
+        
+        # Update password in Supabase Auth (using admin API)
+        # Note: This requires service role key
+        auth_response = supabase.auth.admin.update_user_by_id(
+            user_id,
+            {"password": request.new_password}
+        )
+        
+        # Delete reset token
+        supabase.table("password_resets")\
+            .delete()\
+            .eq("token", request.token)\
+            .execute()
+        
+        return {
+            "message": "Password reset successfully. You can now login with your new password."
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to reset password: {str(e)}")
