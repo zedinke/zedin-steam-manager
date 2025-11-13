@@ -100,22 +100,39 @@ setup_user_dirs() {
     log "✅ User and directories created"
 }
 
-# Download application
+# Download or copy application
 download_app() {
-    log "Downloading application from GitHub..."
+    log "Setting up application files..."
     
-    if [ -d "$INSTALL_DIR/.git" ]; then
+    # Check if we're running from the target directory
+    if [ "$(pwd)" = "$INSTALL_DIR" ]; then
+        log "Running from target directory - files already in place"
+        # Ensure proper ownership
+        sudo chown -R $SERVICE_USER:$SERVICE_USER $INSTALL_DIR
+    elif [ -d "$INSTALL_DIR/.git" ]; then
+        # Update existing installation
+        log "Updating existing installation..."
         cd $INSTALL_DIR
         sudo -u $SERVICE_USER git fetch origin
         sudo -u $SERVICE_USER git reset --hard origin/main
+        sudo chown -R $SERVICE_USER:$SERVICE_USER $INSTALL_DIR
     else
-        sudo rm -rf $INSTALL_DIR
-        sudo -u $SERVICE_USER git clone $GITHUB_REPO $INSTALL_DIR
+        # Fresh installation - try to copy from current directory first
+        if [ -f "$(pwd)/main.py" ] || [ -d "$(pwd)/backend" ]; then
+            log "Copying application files from current directory..."
+            sudo mkdir -p $INSTALL_DIR
+            sudo cp -r * $INSTALL_DIR/
+            sudo chown -R $SERVICE_USER:$SERVICE_USER $INSTALL_DIR
+        else
+            # Download from GitHub
+            log "Downloading application from GitHub..."
+            sudo rm -rf $INSTALL_DIR
+            sudo -u $SERVICE_USER git clone $GITHUB_REPO $INSTALL_DIR
+            sudo chown -R $SERVICE_USER:$SERVICE_USER $INSTALL_DIR
+        fi
     fi
     
-    cd $INSTALL_DIR
-    sudo chown -R $SERVICE_USER:$SERVICE_USER $INSTALL_DIR
-    log "✅ Application downloaded"
+    log "✅ Application files ready"
 }
 
 # Install backend
@@ -331,6 +348,206 @@ show_completion() {
 }
 
 # Export functions for other scripts
+export -f log error warning info
+export -f check_root check_os show_banner confirm_installation
+export -f install_system_deps setup_user_dirs download_app
+export -f install_backend deploy_frontend create_config
+export -f setup_services setup_nginx init_database start_services
+export -f check_status show_completion
+
+# Install SteamCMD
+install_steamcmd() {
+    log "Installing SteamCMD..."
+    
+    sudo dpkg --add-architecture i386
+    sudo apt update
+    sudo apt install -y lib32gcc-s1 libc6:i386 libncurses5:i386 libstdc++6:i386
+    
+    sudo mkdir -p $STEAMCMD_DIR
+    ORIGINAL_DIR=$(pwd)
+    cd /tmp
+    sudo rm -f steamcmd.tar.gz* 2>/dev/null || true
+    
+    if wget -q -O steamcmd.tar.gz https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz; then
+        sudo tar -xzf steamcmd.tar.gz -C $STEAMCMD_DIR
+        sudo chown -R root:root $STEAMCMD_DIR
+        sudo chmod +x $STEAMCMD_DIR/steamcmd.sh
+        log "✅ SteamCMD installed successfully"
+    else
+        warning "SteamCMD download failed - continuing without it"
+    fi
+    
+    cd "$ORIGINAL_DIR"
+}
+
+# Setup services
+setup_services() {
+    log "Setting up systemd services..."
+    
+    sudo tee /etc/systemd/system/zsmanager-backend.service > /dev/null << EOF
+[Unit]
+Description=Zedin Steam Manager Backend
+After=network.target
+
+[Service]
+Type=simple
+User=$SERVICE_USER
+Group=$SERVICE_USER
+WorkingDirectory=$INSTALL_DIR/backend
+Environment=PATH=$INSTALL_DIR/venv/bin
+EnvironmentFile=/etc/zedin/zsmanager.env
+ExecStart=$INSTALL_DIR/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+Restart=always
+RestartSec=3
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/zedin /var/log/zedin $INSTALL_DIR
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    log "✅ Services configured"
+}
+
+# Setup Nginx
+setup_nginx() {
+    log "Setting up Nginx..."
+    
+    # Remove default configurations
+    sudo rm -f /etc/nginx/sites-enabled/default
+    sudo rm -f /etc/nginx/sites-available/default
+    sudo rm -f /etc/nginx/conf.d/default.conf
+    
+    sudo tee /etc/nginx/sites-available/zsmanager > /dev/null << 'EOF'
+server {
+    listen 80 default_server;
+    server_name _;
+    root /opt/zedin-steam-manager/frontend/dist;
+    index index.html;
+
+    # Frontend static files
+    location / {
+        try_files $uri $uri/ /index.html;
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+        add_header Pragma "no-cache";
+        add_header Expires "0";
+    }
+
+    # API proxy
+    location /api/ {
+        proxy_pass http://127.0.0.1:8000/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 300s;
+        proxy_connect_timeout 75s;
+    }
+
+    # Health check
+    location /health {
+        proxy_pass http://127.0.0.1:8000/health;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # API docs
+    location /docs {
+        proxy_pass http://127.0.0.1:8000/docs;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+    add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
+
+    # Gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_proxied expired no-cache no-store private no_last_modified no_etag auth;
+    gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss application/javascript;
+}
+EOF
+
+    sudo ln -sf /etc/nginx/sites-available/zsmanager /etc/nginx/sites-enabled/
+    
+    if ! sudo nginx -t; then
+        error "Nginx configuration test failed"
+    fi
+    
+    log "✅ Nginx configured"
+}
+
+# Initialize database
+init_database() {
+    log "Initializing database..."
+    
+    sudo -u $SERVICE_USER bash << 'EOF'
+cd /opt/zedin-steam-manager
+source venv/bin/activate
+cd backend
+python3 -c "
+try:
+    from config.database import engine
+    from models import base
+    base.Base.metadata.create_all(bind=engine)
+    print('✅ Database initialized successfully')
+except Exception as e:
+    print(f'❌ Database initialization failed: {e}')
+    exit(1)
+"
+EOF
+    
+    log "✅ Database ready"
+}
+
+# Start services
+start_services() {
+    log "Starting services..."
+    
+    sudo systemctl daemon-reload
+    sudo systemctl enable zsmanager-backend nginx
+    
+    if sudo systemctl start zsmanager-backend; then
+        log "✅ Backend service started"
+    else
+        error "Failed to start backend service"
+    fi
+    
+    if sudo systemctl restart nginx; then
+        log "✅ Nginx service started" 
+    else
+        error "Failed to start nginx"
+    fi
+    
+    # Configure firewall
+    sudo ufw --force enable
+    sudo ufw allow ssh
+    sudo ufw allow 80/tcp
+    sudo ufw allow 443/tcp
+    sudo ufw allow 7777:7877/tcp
+    sudo ufw allow 7777:7877/udp
+    
+    sleep 3
+}
 export -f log error warning info check_root check_os show_banner
 export -f install_system_deps setup_user_dirs download_app install_backend
 export -f deploy_frontend create_config setup_services setup_nginx
