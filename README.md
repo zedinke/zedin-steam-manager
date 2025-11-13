@@ -1,390 +1,245 @@
 # Zedin Steam Manager
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![Node.js](https://img.shields.io/badge/node.js-18+-green.svg)](https://nodejs.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-00a393.svg)](https://fastapi.tiangolo.com/)
-[![React](https://img.shields.io/badge/React-18+-61dafb.svg)](https://reactjs.org/)
+**Version:** 0.000001  
+**Professional Steam Server Manager for ASE (Ark: Survival Evolved) and ASA (Ark: Survival Ascended)**
 
-Professional Steam Server Manager for ASE (Ark: Survival Evolved) and ASA (Ark: Survival Ascended) servers.
+## 🚀 Quick Start
 
-## Features
-
-### Core Manager Functionality
-- **Version Control**: Automatic version tracking (V 0.000001)
-- **Update System**: Hourly GitHub version checking with notification system
-- **Real-time Monitoring**: 5-second system resource updates (RAM/HDD/CPU/Network)
-- **Multi-language Support**: i18n with browser language detection
-
-### Server Management
-- **Server Status Monitoring**: Real-time server status (RUNNING, STOPPED, INSTALLING, NOT_INSTALLED)
-- **Start/Stop Control**: Safe server shutdown using RCON DoExit command
-- **Live Installation Logging**: Real-time log viewing during installation with 1-second updates
-- **RCON Integration**: Player listing (ListPlayers) and command execution
-- **Configuration Management**: Web-based .ini file editing (GameUserSettings.ini, Game.ini, Engine.ini)
-
-### File Management
-- **Shared Files System**: Centralized storage for ASE/ASA files to save disk space
-- **File Operations**: Dashboard-based shared file deletion for both ASE and ASA
-- **SteamCMD Integration**: Automated game file installation and updates
-
-### Infrastructure
-- **Multi-Host Support**: Remote server management via SSH
-- **Database Management**: SQLAlchemy with comprehensive data storage
-- **RESTful API**: FastAPI with dedicated endpoints for all operations
-- **Desktop Application**: Electron-based UI with React frontend
-
-## Architecture
-
-```
-Zedin Steam Manager/
-├── backend/                 # FastAPI Python backend
-│   ├── main.py             # Application entry point
-│   ├── config/             # Database and settings configuration
-│   ├── models/             # SQLAlchemy database models
-│   ├── routers/            # API route handlers
-│   ├── services/           # Business logic services
-│   └── requirements.txt    # Python dependencies
-├── frontend/               # React TypeScript frontend
-│   ├── src/
-│   │   ├── components/     # Reusable UI components
-│   │   ├── pages/          # Application pages
-│   │   ├── services/       # API service layer
-│   │   └── stores/         # State management
-│   ├── package.json
-│   └── vite.config.ts
-├── electron/               # Electron desktop wrapper
-│   ├── main.ts             # Electron main process
-│   └── tsconfig.json
-└── package.json            # Root package configuration
-```
-
-## Technology Stack
-
-- **Backend**: FastAPI, SQLAlchemy, Uvicorn, APScheduler
-- **Frontend**: React, TypeScript, Material-UI, React Query, Zustand
-- **Desktop**: Electron with auto-updater
-- **Database**: SQLite (production-ready with PostgreSQL support)
-- **Authentication**: JWT tokens with secure user management
-- **Infrastructure**: Docker-ready, SSH remote management
-
-## Installation
-
-### Prerequisites
-- Node.js 18+ 
-- Python 3.9+
-- Git
-- Ubuntu/Debian Linux (for production)
-- Non-root user with sudo privileges
-
-### User and Group Setup (Linux/Production)
-
-Before installing, create the proper user and group for the Steam Manager:
-
+### Windows
 ```bash
-# 1. Create zsmanager group
-sudo groupadd zsmanager
+# 1. Install dependencies
+install.bat
 
-# 2. Create zsmanager user (system user for service)
-sudo useradd -r -m -g zsmanager -s /bin/bash zsmanager
+# 2. Setup Supabase (see SETUP_SUPABASE.md)
+copy backend\.env.example backend\.env
+# Edit backend\.env with your Supabase credentials
 
-# 3. Set password for zsmanager user (required for security)
-sudo passwd zsmanager
-# Enter a secure password when prompted
+# 3. Initialize database
+cd backend
+python init_db.py
+cd ..
 
-# 4. Add zsmanager user to sudo group (for system operations)
-sudo usermod -aG sudo zsmanager
-
-# 5. Create your personal user (if not exists) and add to zsmanager group
-sudo useradd -m -g users -G zsmanager -s /bin/bash yourusername
-# OR add existing user to zsmanager group:
-sudo usermod -aG zsmanager yourusername
-
-# 6. Set password for your personal user (if newly created)
-sudo passwd yourusername
-# Enter a secure password when prompted
-
-# 5. Set up directory permissions
-sudo mkdir -p /opt/zedin-steam-manager
-sudo mkdir -p /var/lib/zedin/{servers,shared_files,backups}
-sudo mkdir -p /var/log/zedin
-sudo mkdir -p /etc/zedin
-
-# 6. Set proper ownership
-sudo chown -R zsmanager:zsmanager /opt/zedin-steam-manager
-sudo chown -R zsmanager:zsmanager /var/lib/zedin
-sudo chown -R zsmanager:zsmanager /var/log/zedin
-
-# 7. Set directory permissions
-sudo chmod 755 /opt/zedin-steam-manager
-sudo chmod 755 /var/lib/zedin
-sudo chmod 755 /var/log/zedin
-sudo chmod 750 /etc/zedin
-
-# 8. Switch to regular user (NOT root) for installation
-su - yourusername  # Replace with your username
+# 4. Start development
+start-dev.bat
 ```
 
-### 🔐 Security Notes for User Setup
-
-- **Strong Passwords**: Always use strong, unique passwords for both `zsmanager` and personal users
-- **SSH Keys**: Consider setting up SSH key authentication instead of password-only access
-- **Limited Privileges**: The `zsmanager` user has sudo access only for system operations
-- **Service Account**: `zsmanager` is designed as a service account - avoid using it for daily operations
-- **Regular Updates**: Keep user passwords updated regularly for security
-
-### Important: Installation User Requirements
-
-⚠️ **NEVER run the installer as root!**
-
-The installer must be run as a regular user with sudo privileges because:
-- Root user is blocked for security reasons
-- Services run under dedicated `zsmanager` user
-- Proper file permissions are automatically set
-- Security policies prevent root service execution
-
-### 🚀 Installation
-
-#### One-Command Installation
+### Linux/Debian
 ```bash
-curl -sSL https://raw.githubusercontent.com/zedinke/zedin-steam-manager/main/install.sh | bash
-```
+# 1. Make scripts executable
+chmod +x install.sh start-dev.sh
 
-#### Manual Installation  
-```bash
-git clone https://github.com/zedinke/zedin-steam-manager.git
-cd zedin-steam-manager
-chmod +x install.sh
+# 2. Install dependencies
 ./install.sh
+
+# 3. Setup Supabase (see SETUP_SUPABASE.md)
+cp backend/.env.example backend/.env
+# Edit backend/.env with your Supabase credentials
+
+# 4. Initialize database
+cd backend
+python3 init_db.py
+cd ..
+
+# 5. Start development
+./start-dev.sh
 ```
 
-#### Installation Options
-The installer will ask which type of installation you want:
-- **Simple**: Fast deployment with minimal features (3-5 minutes)
-- **Full**: Complete installation with all features (10-15 minutes)
+## 📋 Requirements
 
-### 🛠️ Production Issues?
+### System Requirements
+- **Python:** 3.9+
+- **Node.js:** 18+
+- **Database:** Supabase (PostgreSQL cloud)
+- **OS:** Windows, Linux, macOS
 
-If you experience problems:
+### Linux Additional Requirements
 ```bash
-# Fix deployment issues
-sudo ./deploy-production.sh
-
-# Debug services  
-sudo ./debug-service.sh
-
-# View troubleshooting guide
-cat PRODUCTION_FIX.md
+sudo apt update
+sudo apt install -y python3 python3-pip nodejs npm
 ```
 
-### Quick Start
-```bash
-# Clone repository (as regular user, NOT root)
-git clone https://github.com/zedinke/zedin-steam-manager.git
-cd zedin-steam-manager
+## ✨ Features (Version 0.000001)
 
-# For development:
-npm run install:all
+### Current Features
+✅ User registration and authentication  
+✅ JWT token-based sessions (30-day expiration)  
+✅ Supabase cloud database integration  
+✅ Material-UI dark theme interface  
+✅ Cross-machine login persistence  
+
+### Planned Features (Roadmap)
+- [ ] Multi-server management (ASE/ASA)
+- [ ] Real-time server status monitoring
+- [ ] RCON integration (ListPlayers, DoExit, custom commands)
+- [ ] Multi-host SSH management
+- [ ] Safe server start/stop controls
+- [ ] Live installation logging
+- [ ] Web-based .ini file editor
+- [ ] Shared files system for storage optimization
+- [ ] System resource monitoring (CPU, RAM, Disk, Network)
+- [ ] Automatic update checking (hourly GitHub releases)
+- [ ] Multi-language support with browser detection
+- [ ] Dashboard-based file management
+- [ ] Player management interface
+- [ ] Backup and restore functionality
+- [ ] Scheduled tasks (auto-restart, backups)
+- [ ] Server templates and presets
+- [ ] Performance analytics and graphs
+- [ ] Discord webhook notifications
+
+## 🗂️ Project Structure
+
+```
+zedinsteammanager/
+├── backend/
+│   ├── config/
+│   │   ├── database.py       # PostgreSQL connection
+│   │   ├── settings.py       # App configuration
+│   │   └── supabase_client.py # Supabase integration
+│   ├── models/
+│   │   ├── user.py           # User model
+│   │   ├── token.py          # Token model
+│   │   ├── server.py         # Server model
+│   │   └── host.py           # Host model
+│   ├── routers/
+│   │   └── auth.py           # Authentication endpoints
+│   ├── main.py               # FastAPI application
+│   ├── init_db.py            # Database initialization
+│   └── requirements.txt      # Python dependencies
+├── frontend/
+│   ├── src/
+│   │   ├── pages/
+│   │   │   ├── LoginPage.tsx
+│   │   │   ├── RegisterPage.tsx
+│   │   │   └── DashboardPage.tsx
+│   │   ├── services/
+│   │   │   └── api.ts        # API client
+│   │   ├── App.tsx           # Main app component
+│   │   └── main.tsx          # Entry point
+│   ├── package.json          # Node dependencies
+│   └── vite.config.ts        # Vite configuration
+├── install.bat               # Windows installer
+├── install.sh                # Linux installer
+├── start-dev.bat             # Windows dev starter
+├── start-dev.sh              # Linux dev starter
+├── README.md                 # This file
+└── SETUP_SUPABASE.md         # Supabase setup guide
+```
+
+## 🔐 Security Features
+
+- **Password Hashing:** bcrypt with salt
+- **JWT Tokens:** Stored in database for validation
+- **Token Expiration:** 30-day automatic expiration
+- **SSH Key Auth:** For remote host management
+- **RCON Encryption:** Passwords encrypted in database
+- **CORS Protection:** Configured for specific origins
+- **Admin Controls:** Token generation restricted to admins
+
+## 🌐 API Endpoints
+
+### Authentication
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login user
+- `POST /api/auth/logout` - Logout user
+- `GET /api/auth/me` - Get current user info
+
+### System
+- `GET /api/health` - Service health check
+- `GET /api/version` - Get manager version
+
+## 📝 Database Schema
+
+### Tables
+- **users** - User accounts (id, email, username, password, roles)
+- **user_tokens** - JWT tokens (id, user_id, token, expires_at)
+- **servers** - Server configs (id, name, type, status, ports, paths)
+- **hosts** - SSH hosts (id, name, hostname, port, username, ssh_key)
+
+## 🛠️ Development
+
+### Backend Development
+```bash
+cd backend
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### Frontend Development
+```bash
+cd frontend
 npm run dev
-
-# For production (Linux):
-chmod +x install.sh
-sudo ./install.sh  # This will handle everything automatically
 ```
 
-### Production Installation (Automated)
-
-The `install.sh` script automatically handles:
-
-1. **System Dependencies**: Python, Node.js, SteamCMD
-2. **User Management**: Creates `zsmanager` service user
-3. **Directory Setup**: Creates all required directories with proper permissions
-4. **Application Installation**: Installs backend and frontend
-5. **Service Configuration**: Sets up systemd services
-6. **Web Server**: Configures Nginx reverse proxy
-7. **Firewall**: Configures UFW for game server ports
-8. **Security**: Implements non-root service execution
-
-After installation, the application will be available at:
-- **Web Interface**: `http://your-server-ip/`
-- **API Documentation**: `http://your-server-ip/docs`
-
-### Manual Installation (Development)
+### Database Migrations
 ```bash
-# Install all dependencies
-npm run install:all
-
-# Start development environment
-npm run dev
+cd backend
+python init_db.py
 ```
 
-This will start:
-- Backend API server on http://localhost:8000
-- Frontend development server on http://localhost:3000  
-- Electron desktop application
+## 📦 Production Deployment
 
-### Production Build
+### Systemd Service (Linux)
 ```bash
-# Build all components
+# Backend service
+sudo nano /etc/systemd/system/zedin-backend.service
+
+# Frontend (build and serve with Nginx)
+cd frontend
 npm run build
-
-# Start production server
-npm start
+sudo cp -r dist/* /var/www/zedin-steam-manager/
 ```
 
-## Service Management (Production)
+### Nginx Configuration
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
 
-### Service Status
+    location / {
+        root /var/www/zedin-steam-manager;
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api {
+        proxy_pass http://localhost:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+## 🐛 Troubleshooting
+
+### Backend won't start
 ```bash
-# Check all services
-sudo systemctl status zsmanager-backend
-sudo systemctl status nginx
+# Check Python version
+python --version  # Should be 3.9+
 
-# View logs
-sudo journalctl -f -u zsmanager-backend
-sudo journalctl -f -u nginx
+# Reinstall dependencies
+cd backend
+pip install -r requirements.txt --force-reinstall
 ```
 
-### Starting/Stopping Services
+### Frontend won't start
 ```bash
-# Start services
-sudo systemctl start zsmanager-backend
-sudo systemctl start nginx
+# Check Node version
+node --version  # Should be 18+
 
-# Stop services  
-sudo systemctl stop zsmanager-backend
-sudo systemctl stop nginx
-
-# Restart services
-sudo systemctl restart zsmanager-backend
-sudo systemctl restart nginx
-
-# Enable auto-start on boot
-sudo systemctl enable zsmanager-backend
-sudo systemctl enable nginx
+# Clear cache and reinstall
+cd frontend
+rm -rf node_modules package-lock.json
+npm install
 ```
 
-### Troubleshooting
+### Database connection errors
+- Check your `.env` file has correct Supabase credentials
+- Verify your Supabase project is active
+- Check firewall allows connections to Supabase
 
-#### Permission Issues
-```bash
-# Fix ownership if needed
-sudo chown -R zsmanager:zsmanager /opt/zedin-steam-manager
-sudo chown -R zsmanager:zsmanager /var/lib/zedin
-sudo chown -R zsmanager:zsmanager /var/log/zedin
+## 📄 License
 
-# Check user groups
-groups zsmanager
-id zsmanager
-```
-
-#### Service Issues
-```bash
-# Check service logs for errors
-sudo journalctl -u zsmanager-backend --since "1 hour ago"
-
-# Check port availability
-sudo netstat -tlnp | grep :8000
-sudo netstat -tlnp | grep :80
-
-# Test backend directly
-curl http://localhost:8000/api/health
-```
-
-#### Database Issues
-```bash
-# Check database file permissions
-ls -la /var/lib/zedin/zedin_steam_manager.db
-
-# Reset database (if needed)
-sudo -u zsmanager rm -f /var/lib/zedin/zedin_steam_manager.db
-sudo systemctl restart zsmanager-backend
-```
-
-## Configuration
-
-### Environment Variables
-Create `.env` file in backend directory:
-```env
-DATABASE_URL=sqlite:///./zedin_steam_manager.db
-SECRET_KEY=your-secret-key-here
-STEAMCMD_PATH=./steamcmd
-SHARED_FILES_PATH=./shared_files
-SERVERS_PATH=./servers
-```
-
-### Game Server Configuration
-- **ASE App ID**: 376030
-- **ASA App ID**: 2430930
-- **RCON**: Automatic configuration for player management
-- **Shared Files**: Automatic setup for space-efficient storage
-
-## Security Features
-
-- **Token Management**: Secure JWT authentication (admin-only token generation)
-- **User Management**: Online user data storage (not local)
-- **Admin Controls**: Protected operations require admin privileges
-- **SSH Security**: Secure remote host management
-
-## Usage
-
-### Creating Servers
-1. Navigate to Server Management
-2. Select ASE or ASA
-3. Configure server settings (ports, RCON, max players)
-4. Click "Install Files" to begin installation
-5. Monitor real-time installation logs
-
-### Managing Servers
-- **Start**: Click play button (immediate status change to RUNNING)
-- **Stop**: Safe shutdown using RCON DoExit command  
-- **View Logs**: Real-time log monitoring with 1-second refresh
-- **Configure**: Edit .ini files directly from web interface
-- **RCON**: Execute commands and view player lists
-
-### System Monitoring
-- Real-time resource monitoring (5-second updates)
-- Server process tracking
-- Network usage statistics
-- Disk space management
-
-### Remote Management
-1. Add remote hosts via SSH configuration
-2. Deploy servers across multiple machines
-3. Centralized management from single interface
-
-## API Documentation
-
-When running, visit http://localhost:8000/docs for interactive API documentation.
-
-### Key Endpoints
-- `GET /api/servers` - List all servers
-- `POST /api/servers/{id}/start` - Start server
-- `POST /api/servers/{id}/stop` - Stop server safely
-- `GET /api/servers/{id}/logs` - Get server logs
-- `GET /api/dashboard/info` - System information
-- `GET /api/check-updates` - Check for updates
-
-## Development
-
-### File Structure
-- **Backend Services**: Server management, RCON communication, file operations
-- **Frontend Components**: Dashboard, server cards, log viewers, configuration editors
-- **Electron Integration**: Desktop notifications, auto-updater, system integration
-
-### Adding Game Support
-1. Add game configuration to `config/settings.py`
-2. Implement game-specific service in `services/`
-3. Update frontend with game-specific UI components
-
-## License
-
-MIT License - Professional use permitted
-
-## Support
-
-For issues and feature requests, please use the GitHub issue tracker.
+Copyright © 2025 Zedin. All rights reserved.
 
 ---
 
-**Zedin Steam Manager v0.000001** - Professional Steam Server Management Solution
+**Built with ❤️ for the ARK community**

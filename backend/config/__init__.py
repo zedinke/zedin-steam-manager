@@ -1,1 +1,1 @@
-# Empty file to make this directory a Python package
+"""Configuration package for Zedin Steam Manager."""

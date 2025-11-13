@@ -1,120 +1,46 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+"""FastAPI main application."""
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-import uvicorn
-import time
-from contextlib import asynccontextmanager
+from backend.config.settings import settings
+from backend.routers import auth
 
-from config.database import engine
-from config.settings import Settings
-from config.logging_config import api_logger, error_logger, auth_logger, system_logger, log_api_request, log_error, log_system_info
-from models import base
-from routers import auth, servers, dashboard, system, files, simple_auth, logs
-from services.update_service import UpdateService
-from services.scheduler import start_scheduler
-from middleware.language import LanguageMiddleware
-
-# Database initialization
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    log_system_info("🚀 Starting Zedin Steam Manager API")
-    log_system_info("📊 Initializing database...")
-    base.Base.metadata.create_all(bind=engine)
-    log_system_info("⏰ Starting background scheduler...")
-    start_scheduler()
-    log_system_info("✅ API startup complete")
-    yield
-    # Shutdown - cleanup if needed
-    log_system_info("🛑 Shutting down Zedin Steam Manager API")
-
-# Initialize FastAPI with lifespan
 app = FastAPI(
     title="Zedin Steam Manager API",
-    description="Professional Steam Server Manager for ASE and ASA",
-    version="0.000001",
-    lifespan=lifespan
+    version=settings.VERSION,
+    description="Professional Steam Server Manager for ASE and ASA"
 )
-
-# API Request Logging Middleware
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    start_time = time.time()
-    
-    response = await call_next(request)
-    
-    process_time = time.time() - start_time
-    log_api_request(
-        method=request.method,
-        path=str(request.url.path),
-        status_code=response.status_code,
-        response_time=process_time
-    )
-    
-    return response
 
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "*"],
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Language middleware
-app.add_middleware(LanguageMiddleware)
+# Include routers
+app.include_router(auth.router, prefix="/api")
 
-# Security
-security = HTTPBearer()
-
-# API Routes
-app.include_router(auth.router, tags=["Authentication"])
-app.include_router(simple_auth.router, prefix="/api/auth", tags=["Simple Authentication"])
-app.include_router(servers.router, prefix="/api/servers", tags=["Server Management"])
-app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
-app.include_router(system.router, prefix="/api/system", tags=["System"])
-app.include_router(files.router, prefix="/api/files", tags=["File Management"])
-app.include_router(logs.router, prefix="/api/logs", tags=["Log Management"])
-
-# Health check endpoint
-@app.get("/api/health")
-async def health_check():
-    log_system_info("🏥 Health check requested")
-    return {
-        "status": "healthy",
-        "version": "0.000001",
-        "message": "Zedin Steam Manager API is running"
-    }
-
-# Version endpoint
-@app.get("/api/version")
-async def get_version():
-    return {
-        "version": "0.000001",
-        "name": "Zedin Steam Manager",
-        "description": "Professional Steam Server Manager for ASE and ASA"
-    }
-
-# Update check endpoint
-@app.get("/api/check-updates")
-async def check_updates():
-    update_service = UpdateService()
-    return await update_service.check_for_updates()
-
-# Root endpoint
 @app.get("/")
 async def root():
-    return {"message": "Zedin Steam Manager API", "version": "0.000001"}
+    return {
+        "message": "Zedin Steam Manager API",
+        "version": settings.VERSION,
+        "status": "online"
+    }
 
-if __name__ == "__main__":
-    settings = Settings()
-    uvicorn.run(
-        "main:app",
-        host=settings.HOST,
-        port=settings.PORT,
-        reload=settings.DEBUG,
-        log_level="info"
-    )
+@app.get("/api/health")
+async def health():
+    return {
+        "status": "healthy",
+        "version": settings.VERSION,
+        "app_name": settings.APP_NAME
+    }
+
+@app.get("/api/version")
+async def version():
+    return {
+        "version": settings.VERSION,
+        "app_name": settings.APP_NAME
+    }

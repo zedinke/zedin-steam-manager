@@ -1,45 +1,32 @@
 #!/bin/bash
-
-# ============================================================================
-# Zedin Steam Manager - Production Installation Script
-# Ubuntu/Debian systems - Full installation with all features
-# ============================================================================
-
-# Load installation modules
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/install-modules.sh"
-
-# Pre-installation checks
-check_root
-check_os
-
-# Show banner
-show_banner "ZEDIN STEAM MANAGER - PRODUCTION INSTALLATION"
-log "🚀 Starting production installation with all features..."
-log "⏱️  Estimated time: 10-15 minutes"
+echo "Installing Zedin Steam Manager..."
 echo ""
 
-# Check if running from target directory
-if [ "$(pwd)" = "/opt/zedin-steam-manager" ]; then
-    log "⚠️  Running from target directory - will skip file copying"
+echo "[1/3] Installing backend dependencies..."
+cd backend
+pip install -r requirements.txt
+if [ $? -ne 0 ]; then
+    echo "ERROR: Backend installation failed!"
+    exit 1
 fi
+cd ..
 
-confirm_installation
+echo ""
+echo "[2/3] Installing frontend dependencies..."
+cd frontend
+npm install
+if [ $? -ne 0 ]; then
+    echo "ERROR: Frontend installation failed!"
+    exit 1
+fi
+cd ..
 
-# Installation phases
-install_system_deps
-setup_user_dirs  
-download_app
-install_backend
-deploy_frontend
-create_config
-setup_services
-setup_nginx
-init_database
-start_services
-
-# Check final status
-check_status
-show_completion
-
-log "Installation completed successfully!"
+echo ""
+echo "[3/3] Setup complete!"
+echo ""
+echo "Next steps:"
+echo "1. Follow SETUP_SUPABASE.md to configure your Supabase database"
+echo "2. Copy backend/.env.example to backend/.env and fill in your credentials"
+echo "3. Run: python backend/init_db.py (to create database tables)"
+echo "4. Run: ./start-dev.sh (to start both backend and frontend)"
+echo ""
