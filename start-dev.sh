@@ -1,50 +1,71 @@
 #!/bin/bash
-echo "Starting Zedin Steam Manager Development Environment..."
+
+#############################################
+# Zedin Steam Manager - Development Start
+# Version: 0.0.1-alpha
+#############################################
+
+# Colors
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+echo -e "${BLUE}=============================================="
+echo -e "  Zedin Steam Manager - Development Mode"
+echo -e "===============================================${NC}"
 echo ""
 
-# Start backend in background with virtual environment
-cd backend
-source venv/bin/activate
-uvicorn main:app --reload --host 0.0.0.0 --port 8000 &
-BACKEND_PID=$!
-cd ..
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BACKEND_DIR="$SCRIPT_DIR/backend"
+FRONTEND_DIR="$SCRIPT_DIR/frontend"
 
-# Wait a bit for backend to start
-sleep 3
+# Start backend
+if [ -d "$BACKEND_DIR" ]; then
+    echo -e "${GREEN}Starting backend...${NC}"
+    cd "$BACKEND_DIR"
+    
+    # Activate virtual environment
+    if [ -f "venv/bin/activate" ]; then
+        source venv/bin/activate
+    fi
+    
+    # Start backend in background
+    python3 -m uvicorn main:app --reload --host 0.0.0.0 --port 8000 &
+    BACKEND_PID=$!
+    
+    echo -e "${GREEN}✅ Backend started (PID: $BACKEND_PID)${NC}"
+    echo "   http://localhost:8000"
+else
+    echo "Backend directory not found"
+    exit 1
+fi
 
-# Start frontend in background
-cd frontend
-npm run dev -- --host 0.0.0.0 &
-FRONTEND_PID=$!
-cd ..
-
-echo ""
-echo "Services started:"
-echo "Backend API: http://localhost:8000 (PID: $BACKEND_PID)"
-echo "Frontend: http://localhost:3000 (PID: $FRONTEND_PID)"
-echo ""
-echo "Access from external IP:"
-echo "Backend API: http://YOUR_SERVER_IP:8000"
-echo "Frontend: http://YOUR_SERVER_IP:3000"
-echo ""
-echo "Press Ctrl+C to stop all services"
-echo ""
-
-# Function to cleanup on exit
-cleanup() {
+# Start frontend
+if [ -d "$FRONTEND_DIR" ]; then
     echo ""
-    echo "Stopping services..."
+    echo -e "${GREEN}Starting frontend...${NC}"
+    cd "$FRONTEND_DIR"
+    
+    # Start frontend
+    npm run dev &
+    FRONTEND_PID=$!
+    
+    echo -e "${GREEN}✅ Frontend started (PID: $FRONTEND_PID)${NC}"
+    echo "   http://localhost:3000"
+else
+    echo "Frontend directory not found"
     kill $BACKEND_PID 2>/dev/null
-    kill $FRONTEND_PID 2>/dev/null
-    cd backend
-    deactivate 2>/dev/null
-    cd ..
-    echo "Services stopped."
-    exit 0
-}
+    exit 1
+fi
 
-# Trap Ctrl+C and call cleanup
-trap cleanup SIGINT SIGTERM
+echo ""
+echo -e "${BLUE}=============================================="
+echo -e "  Development servers running"
+echo -e "  Press Ctrl+C to stop"
+echo -e "===============================================${NC}"
 
-# Wait for both processes
+# Wait for Ctrl+C
+trap "kill $BACKEND_PID $FRONTEND_PID 2>/dev/null; exit" SIGINT SIGTERM
+
 wait
