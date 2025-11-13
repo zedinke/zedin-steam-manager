@@ -14,7 +14,7 @@ sleep 3
 
 # Start frontend in background
 cd frontend
-npm run dev &
+npm run dev -- --host 0.0.0.0 &
 FRONTEND_PID=$!
 cd ..
 
@@ -22,6 +22,10 @@ echo ""
 echo "Services started:"
 echo "Backend API: http://localhost:8000 (PID: $BACKEND_PID)"
 echo "Frontend: http://localhost:3000 (PID: $FRONTEND_PID)"
+echo ""
+echo "Access from external IP:"
+echo "Backend API: http://YOUR_SERVER_IP:8000"
+echo "Frontend: http://YOUR_SERVER_IP:3000"
 echo ""
 echo "Press Ctrl+C to stop all services"
 echo ""
