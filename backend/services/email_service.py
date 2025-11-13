@@ -301,3 +301,256 @@ Verification URL: {verification_url}
     except Exception as e:
         print(f"❌ Failed to send email: {e}", flush=True)
         print(f"📧 Verification URL: {verification_url}", flush=True)
+
+
+async def send_token_email(email: str, username: str, token_code: str, duration_days: int):
+    """Send token generation email"""
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost")
+    activation_url = f"{frontend_url}/tokens/activate"
+    
+    html_content = f"""
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Generálva - Zedin Steam Manager</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td style="padding: 40px 20px;">
+                <table role="presentation" style="max-width: 600px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden;">
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
+                            <h1 style="margin: 0; color: white; font-size: 28px; font-weight: bold;">
+                                🎟️ Új Token Generálva
+                            </h1>
+                            <p style="margin: 10px 0 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">
+                                Zedin Steam Manager
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 40px 30px;">
+                            <h2 style="margin: 0 0 20px 0; color: #333; font-size: 24px;">
+                                Üdv {username}! 🎉
+                            </h2>
+                            <p style="margin: 0 0 20px 0; color: #666; font-size: 16px; line-height: 1.6;">
+                                Generáltunk neked egy <strong>Server Admin</strong> tokent! 
+                                Ezzel a tokennel teljes hozzáférést kapsz a szerverkezelési funkciókhoz.
+                            </p>
+                            <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 30px; border-radius: 15px; margin: 30px 0; text-align: center; box-shadow: 0 8px 20px rgba(240, 147, 251, 0.3);">
+                                <p style="margin: 0 0 10px 0; color: white; font-size: 14px; text-transform: uppercase; letter-spacing: 2px;">
+                                    Token Kód
+                                </p>
+                                <p style="margin: 0; color: white; font-size: 24px; font-weight: bold; font-family: 'Courier New', monospace; letter-spacing: 1px; word-break: break-all;">
+                                    {token_code}
+                                </p>
+                            </div>
+                            <table role="presentation" style="width: 100%; margin: 30px 0; background: #f8f9fa; border-radius: 12px; overflow: hidden;">
+                                <tr>
+                                    <td style="padding: 20px; border-bottom: 1px solid #e9ecef;">
+                                        <p style="margin: 0; color: #666; font-size: 14px;">⏱️ <strong>Érvényesség:</strong></p>
+                                        <p style="margin: 5px 0 0 0; color: #333; font-size: 16px;">{duration_days} nap</p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <p style="margin: 0; color: #666; font-size: 14px;">🎯 <strong>Jogosultság:</strong></p>
+                                        <p style="margin: 5px 0 0 0; color: #333; font-size: 16px;">Server Admin</p>
+                                    </td>
+                                </tr>
+                            </table>
+                            <table role="presentation" style="margin: 30px 0; width: 100%;">
+                                <tr>
+                                    <td style="text-align: center;">
+                                        <a href="{activation_url}" 
+                                           style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+                                            🚀 Token Aktiválása
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 8px; margin: 30px 0;">
+                                <h3 style="margin: 0 0 15px 0; color: #856404; font-size: 16px;">
+                                    📝 Aktiválási Lépések
+                                </h3>
+                                <ol style="margin: 0; padding-left: 20px; color: #856404; font-size: 14px; line-height: 1.8;">
+                                    <li>Jelentkezz be a Zedin Steam Manager fiókodba</li>
+                                    <li>Navigálj a "Token Aktiválás" menüpontba</li>
+                                    <li>Másold be a fenti token kódot</li>
+                                    <li>Kattints az "Aktiválás" gombra</li>
+                                    <li>Élvezd a Server Admin jogosultságokat! 🎮</li>
+                                </ol>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e9ecef;">
+                            <p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">
+                                <strong>Zedin Steam Manager</strong> - Token Kezelés
+                            </p>
+                            <p style="margin: 0 0 10px 0; color: #999; font-size: 12px;">
+                                Ez egy automatikus email. Kérjük, ne válaszolj rá.
+                            </p>
+                            <p style="margin: 0; color: #dc3545; font-size: 12px; font-weight: bold;">
+                                ⚠️ Ne oszd meg a token kódot senkivel!
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+    """
+    
+    message = MIMEMultipart('alternative')
+    message['Subject'] = '🎟️ Server Admin Token Generálva - Zedin Steam Manager'
+    message['From'] = os.getenv("SMTP_USER", "noreply@zedinmanager.com")
+    message['To'] = email
+    
+    message.attach(MIMEText(html_content, 'html'))
+    
+    smtp_password = os.getenv("SMTP_PASSWORD")
+    
+    if not smtp_password or smtp_password == "change_me_in_production":
+        print(f"📧 TOKEN EMAIL (Dev Mode) - {email}: {token_code}", flush=True)
+        return
+    
+    try:
+        await aiosmtplib.send(
+            message,
+            hostname=os.getenv("SMTP_HOST", "smtp.gmail.com"),
+            port=int(os.getenv("SMTP_PORT", 587)),
+            username=os.getenv("SMTP_USER"),
+            password=smtp_password,
+            start_tls=True
+        )
+        print(f"✅ Token email sent to {email}", flush=True)
+    except Exception as e:
+        print(f"❌ Failed to send token email: {e}", flush=True)
+
+
+async def send_expiry_notification(email: str, username: str, token_code: str, days_remaining: int):
+    """Send token expiry notification email"""
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost")
+    
+    html_content = f"""
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Lejárat - Zedin Steam Manager</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td style="padding: 40px 20px;">
+                <table role="presentation" style="max-width: 600px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden;">
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #ff9966 0%, #ff5e62 100%); padding: 40px 30px; text-align: center;">
+                            <h1 style="margin: 0; color: white; font-size: 28px; font-weight: bold;">
+                                ⚠️ Token Lejárat
+                            </h1>
+                            <p style="margin: 10px 0 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">
+                                Zedin Steam Manager
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 40px 30px;">
+                            <h2 style="margin: 0 0 20px 0; color: #333; font-size: 24px;">
+                                Üdv {username}!
+                            </h2>
+                            <p style="margin: 0 0 20px 0; color: #666; font-size: 16px; line-height: 1.6;">
+                                A <strong>Server Admin</strong> tokened hamarosan lejár! 
+                                Kérjük, lépj kapcsolatba egy Manager Admin-nal új token generálásához.
+                            </p>
+                            <div style="background: linear-gradient(135deg, #ff9966 0%, #ff5e62 100%); padding: 30px; border-radius: 15px; margin: 30px 0; text-align: center; box-shadow: 0 8px 20px rgba(255, 94, 98, 0.3);">
+                                <p style="margin: 0 0 10px 0; color: white; font-size: 14px; text-transform: uppercase; letter-spacing: 2px;">
+                                    Hátralévő Idő
+                                </p>
+                                <p style="margin: 0; color: white; font-size: 48px; font-weight: bold;">
+                                    {days_remaining}
+                                </p>
+                                <p style="margin: 10px 0 0 0; color: white; font-size: 18px;">
+                                    nap
+                                </p>
+                            </div>
+                            <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin: 30px 0;">
+                                <p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">
+                                    🎟️ <strong>Token Kód:</strong>
+                                </p>
+                                <p style="margin: 0; color: #333; font-size: 16px; font-family: 'Courier New', monospace; word-break: break-all;">
+                                    {token_code}
+                                </p>
+                            </div>
+                            <div style="background: #d1ecf1; border-left: 4px solid #0c5460; padding: 20px; border-radius: 8px; margin: 30px 0;">
+                                <h3 style="margin: 0 0 15px 0; color: #0c5460; font-size: 16px;">
+                                    📋 Következő Lépések
+                                </h3>
+                                <ul style="margin: 0; padding-left: 20px; color: #0c5460; font-size: 14px; line-height: 1.8;">
+                                    <li>Lépj kapcsolatba egy Manager Admin-nal</li>
+                                    <li>Kérj új tokent a jogosultságok megőrzéséhez</li>
+                                    <li>Aktiváld az új tokent a lejárat előtt</li>
+                                </ul>
+                            </div>
+                            <table role="presentation" style="margin: 30px 0; width: 100%;">
+                                <tr>
+                                    <td style="text-align: center;">
+                                        <a href="{frontend_url}/dashboard" 
+                                           style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+                                            📊 Dashboard Megnyitása
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e9ecef;">
+                            <p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">
+                                <strong>Zedin Steam Manager</strong> - Token Kezelés
+                            </p>
+                            <p style="margin: 0; color: #999; font-size: 12px;">
+                                Ez egy automatikus figyelmeztető email.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+    """
+    
+    message = MIMEMultipart('alternative')
+    message['Subject'] = f'⚠️ Token Lejárat ({days_remaining} nap) - Zedin Steam Manager'
+    message['From'] = os.getenv("SMTP_USER", "noreply@zedinmanager.com")
+    message['To'] = email
+    
+    message.attach(MIMEText(html_content, 'html'))
+    
+    smtp_password = os.getenv("SMTP_PASSWORD")
+    
+    if not smtp_password or smtp_password == "change_me_in_production":
+        print(f"📧 EXPIRY EMAIL (Dev Mode) - {email}: {days_remaining} days", flush=True)
+        return
+    
+    try:
+        await aiosmtplib.send(
+            message,
+            hostname=os.getenv("SMTP_HOST", "smtp.gmail.com"),
+            port=int(os.getenv("SMTP_PORT", 587)),
+            username=os.getenv("SMTP_USER"),
+            password=smtp_password,
+            start_tls=True
+        )
+        print(f"✅ Expiry notification sent to {email}", flush=True)
+    except Exception as e:
+        print(f"❌ Failed to send expiry notification: {e}", flush=True)

@@ -6,7 +6,7 @@ import os
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from routers import auth, system, dashboard
+from routers import auth, system, dashboard, tokens
 
 app = FastAPI(
     title="Zedin Steam Manager API",
@@ -27,6 +27,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(system.router, prefix="/api/system", tags=["System"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
+app.include_router(tokens.router, prefix="/api", tags=["Tokens & Notifications"])
 
 @app.get("/api/health")
 async def health_check():
