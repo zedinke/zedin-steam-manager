@@ -4,6 +4,9 @@ import os
 
 router = APIRouter()
 
+# Git executable path
+GIT_CMD = "/usr/bin/git"
+
 @router.post("/git-update")
 async def git_update():
     """Update application from git repository"""
@@ -16,7 +19,7 @@ async def git_update():
         
         # Fetch latest changes
         subprocess.run(
-            ["git", "fetch", "origin", "main"],
+            [GIT_CMD, "fetch", "origin", "main"],
             cwd=app_dir,
             check=True,
             capture_output=True
@@ -24,7 +27,7 @@ async def git_update():
         
         # Check if updates available
         result = subprocess.run(
-            ["git", "rev-list", "HEAD...origin/main", "--count"],
+            [GIT_CMD, "rev-list", "HEAD...origin/main", "--count"],
             cwd=app_dir,
             capture_output=True,
             text=True,
@@ -42,7 +45,7 @@ async def git_update():
         
         # Pull updates
         subprocess.run(
-            ["git", "pull", "origin", "main"],
+            [GIT_CMD, "pull", "origin", "main"],
             cwd=app_dir,
             check=True,
             capture_output=True
@@ -70,7 +73,7 @@ async def git_status():
     try:
         # Fetch latest changes
         subprocess.run(
-            ["git", "fetch", "origin", "main"],
+            [GIT_CMD, "fetch", "origin", "main"],
             cwd=app_dir,
             check=True,
             capture_output=True
@@ -78,7 +81,7 @@ async def git_status():
         
         # Check commits behind
         result = subprocess.run(
-            ["git", "rev-list", "HEAD...origin/main", "--count"],
+            [GIT_CMD, "rev-list", "HEAD...origin/main", "--count"],
             cwd=app_dir,
             capture_output=True,
             text=True,
