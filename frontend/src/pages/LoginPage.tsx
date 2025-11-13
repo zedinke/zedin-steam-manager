@@ -40,6 +40,9 @@ export default function LoginPage() {
           <Typography variant="h6" align="center" color="text.secondary" gutterBottom>
             Login
           </Typography>
+          <Typography variant="body2" align="center" color="text.secondary" sx={{ mb: 2 }}>
+            Szia! 👋
+          </Typography>
 
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
