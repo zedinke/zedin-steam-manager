@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 
+const API_URL = 'http://localhost:8001/api';
+
 // Inline simple login component
-function SimpleLogin({ onLoginSuccess }: { onLoginSuccess: (email: string) => void }) {
+function SimpleLogin({ onLoginSuccess }: { onLoginSuccess: (email: string, token: string, userData: any) => void }) {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -14,18 +16,38 @@ function SimpleLogin({ onLoginSuccess }: { onLoginSuccess: (email: string) => vo
     console.log('🔑 Login attempt started');
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Bejelentkezési hiba');
+      }
+
       console.log('✅ Login successful');
       setMessage('✅ Bejelentkezés sikeres!');
       
+      // Store token
+      localStorage.setItem('authToken', data.access_token);
+      localStorage.setItem('userEmail', formData.email);
+      
       setTimeout(() => {
         console.log('🚀 Navigating to dashboard');
-        onLoginSuccess(formData.email);
+        onLoginSuccess(formData.email, data.access_token, data.user);
       }, 500);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Login error:', error);
-      setMessage('❌ Hiba történt');
+      setMessage(`❌ ${error.message || 'Hiba történt'}`);
     } finally {
       setIsLoading(false);
     }
@@ -131,11 +153,51 @@ function SimpleLogin({ onLoginSuccess }: { onLoginSuccess: (email: string) => vo
 }
 
 // Simple inline dashboard component
-function Dashboard({ userEmail }: { userEmail: string }) {
+function Dashboard({ userEmail, token, userData }: { userEmail: string; token: string; userData: any }) {
+  const [systemData, setSystemData] = useState<any>(null);
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadDashboardData();
+    // Refresh every 5 seconds
+    const interval = setInterval(loadDashboardData, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      const [systemRes, dashboardRes] = await Promise.all([
+        fetch(`${API_URL}/system/info`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch(`${API_URL}/dashboard`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      ]);
+
+      if (systemRes.ok) {
+        const sysData = await systemRes.json();
+        setSystemData(sysData);
+      }
+
+      if (dashboardRes.ok) {
+        const dashData = await dashboardRes.json();
+        setDashboardData(dashData);
+      }
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   console.log('🏠 Dashboard component rendered');
   
   const handleLogout = () => {
     console.log('🚪 Logout clicked');
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userEmail');
     window.location.reload();
   };
 
@@ -216,10 +278,30 @@ function Dashboard({ userEmail }: { userEmail: string }) {
           gap: '20px',
           marginBottom: '30px'
         }}>
-          <StatCard title="Összes Szerver" value="12" icon="🎮" color="#2196f3" />
-          <StatCard title="Aktív Szerverek" value="8" icon="✅" color="#4caf50" />
-          <StatCard title="Online Játékosok" value="245" icon="👥" color="#ff9800" />
-          <StatCard title="Rendszer Állapot" value="100%" icon="💚" color="#4caf50" />
+          <StatCard 
+            title="CPU Használat" 
+            value={systemData ? `${systemData.cpu?.percent || 0}%` : '0%'} 
+            icon="💻" 
+            color="#2196f3" 
+          />
+          <StatCard 
+            title="RAM Használat" 
+            value={systemData ? `${systemData.memory?.percent || 0}%` : '0%'} 
+            icon="🧠" 
+            color="#4caf50" 
+          />
+          <StatCard 
+            title="Disk Használat" 
+            value={systemData ? `${systemData.disk?.percent || 0}%` : '0%'} 
+            icon="💾" 
+            color="#ff9800" 
+          />
+          <StatCard 
+            title="Rendszer Állapot" 
+            value={systemData ? "Online" : "Loading"} 
+            icon="💚" 
+            color="#4caf50" 
+          />
         </div>
 
         {/* Content Panels Row */}
@@ -236,21 +318,33 @@ function Dashboard({ userEmail }: { userEmail: string }) {
             borderRadius: '8px',
             border: '1px solid #333'
           }}>
-            <h3 style={{ color: 'white', marginBottom: '20px', fontSize: '18px' }}>Szerver Statisztikák</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-              <div>
-                <div style={{ color: '#2196f3', fontSize: '24px', fontWeight: 'bold', marginBottom: '5px' }}>156</div>
-                <div style={{ color: '#bbb', fontSize: '14px' }}>Befejezett Játékok</div>
-                <div style={{ color: '#4caf50', fontSize: '20px', marginTop: '10px' }}>487.2h</div>
-                <div style={{ color: '#bbb', fontSize: '14px' }}>Összes Játékidő</div>
+            <h3 style={{ color: 'white', marginBottom: '20px', fontSize: '18px' }}>Rendszer Információ</h3>
+            {systemData ? (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <div>
+                  <div style={{ color: '#2196f3', fontSize: '24px', fontWeight: 'bold', marginBottom: '5px' }}>
+                    {systemData.cpu?.count || 0}
+                  </div>
+                  <div style={{ color: '#bbb', fontSize: '14px' }}>CPU Magok</div>
+                  <div style={{ color: '#4caf50', fontSize: '20px', marginTop: '10px' }}>
+                    {systemData.memory ? `${(systemData.memory.used / (1024**3)).toFixed(1)} GB` : '0 GB'}
+                  </div>
+                  <div style={{ color: '#bbb', fontSize: '14px' }}>Használt RAM</div>
+                </div>
+                <div>
+                  <div style={{ color: '#f44336', fontSize: '24px', fontWeight: 'bold', marginBottom: '5px' }}>
+                    {systemData.disk ? `${(systemData.disk.used / (1024**3)).toFixed(0)} GB` : '0 GB'}
+                  </div>
+                  <div style={{ color: '#bbb', fontSize: '14px' }}>Használt Disk</div>
+                  <div style={{ color: '#ff9800', fontSize: '20px', marginTop: '10px' }}>
+                    {systemData.network ? `${(systemData.network.bytes_sent / (1024**2)).toFixed(0)} MB` : '0 MB'}
+                  </div>
+                  <div style={{ color: '#bbb', fontSize: '14px' }}>Küldött Adat</div>
+                </div>
               </div>
-              <div>
-                <div style={{ color: '#f44336', fontSize: '24px', fontWeight: 'bold', marginBottom: '5px' }}>3</div>
-                <div style={{ color: '#bbb', fontSize: '14px' }}>Aktív Események</div>
-                <div style={{ color: '#ff9800', fontSize: '20px', marginTop: '10px' }}>2,847</div>
-                <div style={{ color: '#bbb', fontSize: '14px' }}>Összes Játékos</div>
-              </div>
-            </div>
+            ) : (
+              <div style={{ color: '#bbb' }}>Betöltés...</div>
+            )}
           </div>
 
           {/* System Status */}
@@ -260,14 +354,20 @@ function Dashboard({ userEmail }: { userEmail: string }) {
             borderRadius: '8px',
             border: '1px solid #333'
           }}>
-            <h3 style={{ color: 'white', marginBottom: '20px', fontSize: '18px' }}>Karbantartás</h3>
+            <h3 style={{ color: 'white', marginBottom: '20px', fontSize: '18px' }}>Gyors Statisztikák</h3>
             <div>
-              <div style={{ color: '#2196f3', fontSize: '24px', fontWeight: 'bold', marginBottom: '5px' }}>5</div>
-              <div style={{ color: '#bbb', fontSize: '14px' }}>Ütemezett</div>
-              <div style={{ color: '#ff9800', fontSize: '20px', marginTop: '15px' }}>2</div>
-              <div style={{ color: '#bbb', fontSize: '14px' }}>Folyamatban</div>
-              <div style={{ color: '#4caf50', fontSize: '20px', marginTop: '15px' }}>98</div>
-              <div style={{ color: '#bbb', fontSize: '14px' }}>Befejezett</div>
+              <div style={{ color: '#2196f3', fontSize: '24px', fontWeight: 'bold', marginBottom: '5px' }}>
+                {systemData?.uptime ? Math.floor(systemData.uptime / 3600) : 0}h
+              </div>
+              <div style={{ color: '#bbb', fontSize: '14px' }}>Rendszer Uptime</div>
+              <div style={{ color: '#ff9800', fontSize: '20px', marginTop: '15px' }}>
+                {systemData?.boot_time ? new Date(systemData.boot_time * 1000).toLocaleDateString() : 'N/A'}
+              </div>
+              <div style={{ color: '#bbb', fontSize: '14px' }}>Utolsó Indítás</div>
+              <div style={{ color: '#4caf50', fontSize: '20px', marginTop: '15px' }}>
+                {systemData ? 'Működik' : 'Betöltés'}
+              </div>
+              <div style={{ color: '#bbb', fontSize: '14px' }}>Állapot</div>
             </div>
           </div>
         </div>
@@ -279,7 +379,9 @@ function Dashboard({ userEmail }: { userEmail: string }) {
           borderRadius: '8px',
           border: '1px solid #333'
         }}>
-          <h3 style={{ color: 'white', marginBottom: '20px', fontSize: '18px' }}>Havi Szerver Aktivitás (2025)</h3>
+          <h3 style={{ color: 'white', marginBottom: '20px', fontSize: '18px' }}>
+            Rendszer Monitoring {loading && '(Betöltés...)'}
+          </h3>
           <div style={{
             height: '300px',
             background: '#1a1a1a',
@@ -290,15 +392,16 @@ function Dashboard({ userEmail }: { userEmail: string }) {
             padding: '20px',
             position: 'relative'
           }}>
-            {[60, 45, 80, 55, 70, 35, 40, 65, 75, 85, 90, 100].map((height, index) => (
-              <div key={index} style={{
-                width: '20px',
-                height: `${height}%`,
-                background: 'linear-gradient(180deg, #2196f3 0%, #1976d2 100%)',
-                borderRadius: '4px 4px 0 0',
-                transition: 'all 0.3s ease'
-              }} />
-            ))}
+            {systemData ? (
+              <>
+                <ChartBar height={systemData.cpu?.percent || 0} label="CPU" />
+                <ChartBar height={systemData.memory?.percent || 0} label="RAM" />
+                <ChartBar height={systemData.disk?.percent || 0} label="Disk" />
+                <ChartBar height={80} label="Net" />
+              </>
+            ) : (
+              <div style={{ color: '#bbb', margin: 'auto' }}>Betöltés...</div>
+            )}
             <div style={{
               position: 'absolute',
               top: '20px',
@@ -309,7 +412,7 @@ function Dashboard({ userEmail }: { userEmail: string }) {
               padding: '5px 10px',
               borderRadius: '4px'
             }}>
-              Szerverek: 12
+              Live Data
             </div>
           </div>
         </div>
@@ -362,12 +465,68 @@ function StatCard({ title, value, icon, color }: { title: string; value: string;
   );
 }
 
+function ChartBar({ height, label }: { height: number; label: string }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
+      <div style={{
+        width: '40px',
+        height: `${Math.min(height, 100)}%`,
+        background: 'linear-gradient(180deg, #2196f3 0%, #1976d2 100%)',
+        borderRadius: '4px 4px 0 0',
+        transition: 'all 0.3s ease'
+      }} />
+      <div style={{ color: '#bbb', fontSize: '12px' }}>{label}</div>
+      <div style={{ color: 'white', fontSize: '14px', fontWeight: 'bold' }}>{Math.round(height)}%</div>
+    </div>
+  );
+}
+
 // Main App component
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState('');
+  const [authToken, setAuthToken] = useState('');
+  const [userData, setUserData] = useState<any>(null);
   
   console.log('🚀 App component loaded - isLoggedIn:', isLoggedIn);
+
+  useEffect(() => {
+    // Check for existing token on mount
+    const token = localStorage.getItem('authToken');
+    const email = localStorage.getItem('userEmail');
+    
+    if (token && email) {
+      console.log('🔄 Found existing session, verifying...');
+      verifyToken(token, email);
+    }
+  }, []);
+
+  const verifyToken = async (token: string, email: string) => {
+    try {
+      const response = await fetch(`${API_URL}/auth/me`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const user = await response.json();
+        console.log('✅ Token valid, auto-login');
+        setIsLoggedIn(true);
+        setUserEmail(email);
+        setAuthToken(token);
+        setUserData(user);
+      } else {
+        console.log('❌ Token invalid, clearing session');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userEmail');
+      }
+    } catch (error) {
+      console.error('Token verification failed:', error);
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userEmail');
+    }
+  };
 
   useEffect(() => {
     console.log('isLoggedIn state changed to:', isLoggedIn);
@@ -375,15 +534,17 @@ function App() {
   
   if (!isLoggedIn) {
     console.log('📝 Showing login component');
-    return <SimpleLogin onLoginSuccess={(email) => {
+    return <SimpleLogin onLoginSuccess={(email, token, user) => {
       console.log('🔄 Setting login state to true');
       setIsLoggedIn(true);
       setUserEmail(email);
+      setAuthToken(token);
+      setUserData(user);
     }} />;
   }
   
   console.log('🏠 Showing dashboard component');
-  return <Dashboard userEmail={userEmail} />;
+  return <Dashboard userEmail={userEmail} token={authToken} userData={userData} />;
 }
 
 export default App;
