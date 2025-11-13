@@ -38,8 +38,25 @@ echo "======================================"
 echo "STEP 1: Installing system dependencies"
 echo "======================================"
 
+# Remove NodeSource repository if exists to avoid conflicts
+if [ -f /etc/apt/sources.list.d/nodesource.list ]; then
+    echo "Removing NodeSource repository..."
+    sudo rm -f /etc/apt/sources.list.d/nodesource.list
+    sudo apt update
+fi
+
+# Install system packages
 sudo apt update
-sudo apt install -y python3 python3-pip python3-venv python3-full nodejs npm nginx
+sudo apt install -y python3 python3-pip python3-venv python3-full nginx curl
+
+# Install Node.js 20.x from NodeSource properly
+if ! command -v node &> /dev/null || [ "$(node -v | cut -d'.' -f1 | tr -d 'v')" -lt 18 ]; then
+    echo "Installing Node.js 20.x..."
+    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+    sudo apt install -y nodejs
+else
+    echo "Node.js $(node -v) already installed"
+fi
 
 echo "✅ System dependencies installed"
 
