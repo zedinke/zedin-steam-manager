@@ -85,8 +85,8 @@ class SupabaseService:
             if not client:
                 return None
                 
-            result = client.table("users").select("*").eq("email", email).single().execute()
-            return result.data if result.data else None
+            result = client.table("users").select("*").eq("email", email).execute()
+            return result.data[0] if result.data else None
             
         except Exception as e:
             logger.error(f"Failed to get user from Supabase: {e}")
@@ -100,8 +100,8 @@ class SupabaseService:
             if not client:
                 return None
                 
-            result = client.table("users").select("*").eq("id", user_id).single().execute()
-            return result.data if result.data else None
+            result = client.table("users").select("*").eq("id", user_id).execute()
+            return result.data[0] if result.data else None
             
         except Exception as e:
             logger.error(f"Failed to get user by ID from Supabase: {e}")
@@ -160,8 +160,8 @@ class SupabaseService:
             if not client:
                 return None
                 
-            result = client.table("user_tokens").select("*").eq("user_id", user_id).eq("status", "ACTIVE").single().execute()
-            return result.data if result.data else None
+            result = client.table("user_tokens").select("*").eq("user_id", user_id).eq("status", "ACTIVE").execute()
+            return result.data[0] if result.data else None
             
         except Exception as e:
             logger.error(f"Failed to get active token from Supabase: {e}")

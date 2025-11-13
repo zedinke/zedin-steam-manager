@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 from config.database import engine
 from config.settings import Settings
 from models import base
-from routers import auth, servers, dashboard, system, files
+from routers import auth, servers, dashboard, system, files, simple_auth
 from services.update_service import UpdateService
 from services.scheduler import start_scheduler
 from middleware.language import LanguageMiddleware
@@ -48,6 +48,7 @@ security = HTTPBearer()
 
 # API Routes
 app.include_router(auth.router, tags=["Authentication"])
+app.include_router(simple_auth.router, prefix="/api/auth", tags=["Simple Authentication"])
 app.include_router(servers.router, prefix="/api/servers", tags=["Server Management"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
 app.include_router(system.router, prefix="/api/system", tags=["System"])

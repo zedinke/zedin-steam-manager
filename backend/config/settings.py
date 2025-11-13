@@ -1,5 +1,9 @@
 import os
 from pydantic_settings import BaseSettings
+from dotenv import load_dotenv
+
+# Load .env file
+load_dotenv()
 
 class Settings(BaseSettings):
     # Application
@@ -16,9 +20,9 @@ class Settings(BaseSettings):
     TEST_DATABASE_URL: str = "sqlite:///./test_zedin_steam_manager.db"
     
     # Supabase API Configuration
-    SUPABASE_URL: str = ""
-    SUPABASE_SERVICE_ROLE_KEY: str = ""
-    SUPABASE_ANON_KEY: str = ""
+    SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
+    SUPABASE_SERVICE_ROLE_KEY: str = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+    SUPABASE_ANON_KEY: str = os.getenv("SUPABASE_ANON_KEY", "")
     
     # Security
     SECRET_KEY: str = "zedin-steam-manager-secret-key-change-in-production"
