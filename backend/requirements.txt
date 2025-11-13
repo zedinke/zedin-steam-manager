@@ -1,0 +1,31 @@
+# FastAPI and dependencies
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+
+# Supabase
+supabase==2.3.0
+
+# Database
+sqlalchemy==2.0.25
+psycopg2-binary==2.9.9
+
+# Authentication
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+pydantic-settings==2.1.0
+
+# RCON for game servers
+mcrcon==0.7.0
+
+# SSH for remote host management
+paramiko==3.4.0
+
+# System monitoring
+psutil==5.9.8
+
+# Scheduled tasks
+apscheduler==3.10.4
+
+# HTTP client
+httpx==0.26.0
