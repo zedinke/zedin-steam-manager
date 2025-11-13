@@ -277,6 +277,12 @@ if [ -f "package.json" ] && [ "$SKIP_DEPS" = false ]; then
         fi
         
         if [ "$FRONTEND_UPDATED" = true ] || [ "$FORCE_UPDATE" = true ]; then
+            # Clean build cache
+            log "Cleaning frontend build cache..."
+            sudo -u $SERVICE_USER rm -rf .vite node_modules/.vite dist 2>/dev/null || true
+            sudo -u $SERVICE_USER rm -rf node_modules/.cache 2>/dev/null || true
+            
+            # Rebuild
             sudo -u $SERVICE_USER npm run build
             log "✓ Frontend rebuilt successfully"
         fi
