@@ -2,8 +2,40 @@ import React, { useState, useEffect } from 'react';
 
 const API_URL = 'http://localhost:8001/api';
 
+interface UserData {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: string;
+  is_active: boolean;
+}
+
+interface SystemInfo {
+  cpu?: {
+    percent: number;
+    count: number;
+  };
+  memory?: {
+    percent: number;
+    used: number;
+    total: number;
+  };
+  disk?: {
+    percent: number;
+    used: number;
+    total: number;
+  };
+  network?: {
+    bytes_sent: number;
+    bytes_recv: number;
+  };
+  uptime?: number;
+  boot_time?: number;
+}
+
 // Inline simple login component
-function SimpleLogin({ onLoginSuccess }: { onLoginSuccess: (email: string, token: string, userData: any) => void }) {
+function SimpleLogin({ onLoginSuccess }: { onLoginSuccess: (email: string, token: string, userData: UserData) => void }) {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -153,8 +185,8 @@ function SimpleLogin({ onLoginSuccess }: { onLoginSuccess: (email: string, token
 }
 
 // Simple inline dashboard component
-function Dashboard({ userEmail, token, userData }: { userEmail: string; token: string; userData: any }) {
-  const [systemData, setSystemData] = useState<any>(null);
+function Dashboard({ userEmail, token, userData }: { userEmail: string; token: string; userData: UserData | null }) {
+  const [systemData, setSystemData] = useState<SystemInfo | null>(null);
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -486,7 +518,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState('');
   const [authToken, setAuthToken] = useState('');
-  const [userData, setUserData] = useState<any>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
   
   console.log('🚀 App component loaded - isLoggedIn:', isLoggedIn);
 
@@ -510,7 +542,7 @@ function App() {
       });
 
       if (response.ok) {
-        const user = await response.json();
+        const user: UserData = await response.json();
         console.log('✅ Token valid, auto-login');
         setIsLoggedIn(true);
         setUserEmail(email);
