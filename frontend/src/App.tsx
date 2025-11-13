@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 
-const API_URL = 'http://localhost:8001/api';
+// API URL: use relative path in production, localhost in development
+const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:8001/api'
+  : '/api';
 
 interface UserData {
   id: number;
