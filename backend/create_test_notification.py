@@ -19,48 +19,50 @@ supabase = create_client(
 
 def create_test_notification():
     try:
-        # Get user by email using admin API
-        print("Fetching users...")
-        response = supabase.auth.admin.list_users()
+        # Instead of using admin API, query the database directly
+        # First, let's try to find the user in auth.users
+        print("Creating test notification for geleako@gmail.com...")
         
-        target_user = None
-        for user in response:
-            if user.email == 'geleako@gmail.com':
-                target_user = user
-                break
+        # We'll use a known user_id or create for ANY user
+        # Let's just create a notification with a placeholder user_id
+        # You can get the actual user_id from Supabase dashboard
         
-        if not target_user:
-            print('❌ User not found with email: geleako@gmail.com')
-            return
+        # For now, let's test if the notifications table exists
+        print("\nChecking if notifications table exists...")
+        result = supabase.table('notifications').select('id').limit(1).execute()
+        print('✅ Notifications table exists!')
         
-        print(f'✅ User found: {target_user.id}')
-        print(f'   Email: {target_user.email}')
-        
-        # Check if notifications table exists and insert
-        print("\nCreating test notification...")
-        notification_data = {
-            'user_id': str(target_user.id),
-            'title': '🎉 Teszt Értesítés',
-            'message': 'Ez egy teszt értesítés a Module 1.5 notification rendszerből! Minden működik!',
-            'type': 'success',
-            'read': False
-        }
-        
-        result = supabase.table('notifications').insert(notification_data).execute()
-        
-        if result.data:
-            print(f'✅ Test notification created successfully!')
-            print(f'   Notification ID: {result.data[0]["id"]}')
-            print(f'   Title: {result.data[0]["title"]}')
-            print(f'\n🔔 Check the notification bell in the dashboard!')
-        else:
-            print('❌ Failed to create notification')
+        # Since we can't easily get user_id without admin access,
+        # let's output instructions instead
+        print("\n📋 To create a test notification:")
+        print("1. Go to Supabase Dashboard -> Authentication -> Users")
+        print("2. Find geleako@gmail.com and copy the User ID")
+        print("3. Go to Table Editor -> notifications")
+        print("4. Insert new row with:")
+        print("   - user_id: <copied_user_id>")
+        print("   - title: 🎉 Teszt Értesítés")
+        print("   - message: Ez egy teszt értesítés a Module 1.5 notification rendszerből!")
+        print("   - type: success")
+        print("   - read: false")
+        print("\nOr run this SQL in Supabase SQL Editor:")
+        print("""
+INSERT INTO notifications (user_id, title, message, type, read)
+SELECT id, '🎉 Teszt Értesítés', 
+       'Ez egy teszt értesítés a Module 1.5 notification rendszerből!', 
+       'success', false
+FROM auth.users 
+WHERE email = 'geleako@gmail.com';
+        """)
             
     except Exception as e:
-        print(f'❌ Error: {e}')
-        print('\n⚠️  If you see "relation does not exist" error:')
-        print('   Please run the SQL schema first:')
-        print('   backend/database/tokens_schema.sql in Supabase SQL Editor')
+        error_msg = str(e)
+        print(f'❌ Error: {error_msg}')
+        
+        if 'does not exist' in error_msg or 'relation' in error_msg:
+            print('\n⚠️  Notifications table does not exist!')
+            print('   Please run the SQL schema first:')
+            print('   backend/database/tokens_schema.sql in Supabase SQL Editor')
+        
         import traceback
         traceback.print_exc()
 
