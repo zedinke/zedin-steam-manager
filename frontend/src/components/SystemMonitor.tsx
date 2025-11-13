@@ -43,20 +43,37 @@ interface SystemInfo {
     free: number
     percent: number
   }
+  network: {
+    bytes_sent: number
+    bytes_recv: number
+    packets_sent: number
+    packets_recv: number
+  }
 }
 
 interface SystemHistory {
   cpu: number[]
   memory: number[]
+  network_sent: number[]
+  network_recv: number[]
   timestamps: string[]
 }
 
 export default function SystemMonitor() {
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null)
-  const [history, setHistory] = useState<SystemHistory>({ cpu: [], memory: [], timestamps: [] })
+  const [history, setHistory] = useState<SystemHistory>({ 
+    cpu: [], 
+    memory: [], 
+    network_sent: [], 
+    network_recv: [], 
+    timestamps: [] 
+  })
   const [realtimeCpu, setRealtimeCpu] = useState<number[]>([])
   const [realtimeMemory, setRealtimeMemory] = useState<number[]>([])
+  const [realtimeNetworkSent, setRealtimeNetworkSent] = useState<number[]>([])
+  const [realtimeNetworkRecv, setRealtimeNetworkRecv] = useState<number[]>([])
   const [realtimeLabels, setRealtimeLabels] = useState<string[]>([])
+  const [lastNetworkBytes, setLastNetworkBytes] = useState<{sent: number, recv: number} | null>(null)
 
   // Fetch real-time data every 2 seconds
   useEffect(() => {
@@ -66,7 +83,28 @@ export default function SystemMonitor() {
         const data = response.data
         setSystemInfo(data)
 
-        // Update realtime chart (last 60 samples = 2 minutes)
+        // Calculate network rates (MB/s)
+        if (lastNetworkBytes) {
+          const sentRate = ((data.network.bytes_sent - lastNetworkBytes.sent) / 2 / 1024 / 1024).toFixed(2) // MB/s over 2 seconds
+          const recvRate = ((data.network.bytes_recv - lastNetworkBytes.recv) / 2 / 1024 / 1024).toFixed(2) // MB/s over 2 seconds
+          
+          setRealtimeNetworkSent(prev => {
+            const newData = [...prev, parseFloat(sentRate)]
+            return newData.slice(-30)
+          })
+          
+          setRealtimeNetworkRecv(prev => {
+            const newData = [...prev, parseFloat(recvRate)]
+            return newData.slice(-30)
+          })
+        }
+        
+        setLastNetworkBytes({
+          sent: data.network.bytes_sent,
+          recv: data.network.bytes_recv
+        })
+
+        // Update realtime chart (last 30 samples = 1 minute)
         const now = new Date().toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
         
         setRealtimeCpu(prev => {
@@ -92,7 +130,7 @@ export default function SystemMonitor() {
     const interval = setInterval(fetchRealtime, 2000) // Every 2 seconds
 
     return () => clearInterval(interval)
-  }, [])
+  }, [lastNetworkBytes])
 
   // Fetch historical data every 2 minutes
   useEffect(() => {
@@ -203,86 +241,89 @@ export default function SystemMonitor() {
     }]
   }
 
+  const realtimeNetworkData = {
+    labels: realtimeLabels,
+    datasets: [
+      {
+        label: 'Letöltés (MB/s)',
+        data: realtimeNetworkRecv,
+        borderColor: 'rgb(54, 162, 235)',
+        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+        fill: true,
+        tension: 0.4
+      },
+      {
+        label: 'Feltöltés (MB/s)',
+        data: realtimeNetworkSent,
+        borderColor: 'rgb(255, 206, 86)',
+        backgroundColor: 'rgba(255, 206, 86, 0.1)',
+        fill: true,
+        tension: 0.4
+      }
+    ]
+  }
+
+  const historyNetworkData = {
+    labels: history.timestamps,
+    datasets: [
+      {
+        label: 'Letöltés (MB/s)',
+        data: history.network_recv,
+        borderColor: 'rgb(54, 162, 235)',
+        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+        fill: true,
+        tension: 0.4
+      },
+      {
+        label: 'Feltöltés (MB/s)',
+        data: history.network_sent,
+        borderColor: 'rgb(255, 206, 86)',
+        backgroundColor: 'rgba(255, 206, 86, 0.1)',
+        fill: true,
+        tension: 0.4
+      }
+    ]
+  }
+
+  const networkChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top' as const },
+      title: { display: false }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: { callback: (value: any) => value + ' MB/s' }
+      }
+    },
+    animation: { duration: 0 }
+  }
+
+  const networkHistoryOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top' as const },
+      title: { display: false }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: { callback: (value: any) => value + ' MB/s' }
+      }
+    }
+  }
+
   if (!systemInfo) {
     return <Typography>Betöltés...</Typography>
   }
 
   return (
     <Grid container spacing={3}>
-      {/* CPU Real-time */}
-      <Grid item xs={12} md={6}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              CPU használat (valós idejű - 2mp)
-            </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              {systemInfo.cpu.percent.toFixed(1)}% | {systemInfo.cpu.cores} mag, {systemInfo.cpu.threads} szál
-            </Typography>
-            <Box sx={{ height: 200, mt: 2 }}>
-              <Line data={realtimeCpuData} options={realtimeChartOptions} />
-            </Box>
-          </CardContent>
-        </Card>
-      </Grid>
-
-      {/* RAM Real-time */}
-      <Grid item xs={12} md={6}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              RAM használat (valós idejű - 2mp)
-            </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              {formatBytes(systemInfo.memory.free)} szabad / {formatBytes(systemInfo.memory.total)} összesen
-            </Typography>
-            <Box sx={{ mt: 2 }}>
-              <LinearProgress 
-                variant="determinate" 
-                value={systemInfo.memory.percent} 
-                sx={{ height: 10, borderRadius: 5 }}
-              />
-              <Typography variant="body2" align="center" sx={{ mt: 1 }}>
-                {systemInfo.memory.percent.toFixed(1)}%
-              </Typography>
-            </Box>
-            <Box sx={{ height: 180, mt: 2 }}>
-              <Line data={realtimeMemoryData} options={realtimeChartOptions} />
-            </Box>
-          </CardContent>
-        </Card>
-      </Grid>
-
-      {/* CPU History */}
-      <Grid item xs={12} md={6}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              CPU történet (2 óra - 2 perces minták)
-            </Typography>
-            <Box sx={{ height: 250, mt: 2 }}>
-              <Line data={historyCpuData} options={historyChartOptions} />
-            </Box>
-          </CardContent>
-        </Card>
-      </Grid>
-
-      {/* RAM History */}
-      <Grid item xs={12} md={6}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              RAM történet (2 óra - 2 perces minták)
-            </Typography>
-            <Box sx={{ height: 250, mt: 2 }}>
-              <Line data={historyMemoryData} options={historyChartOptions} />
-            </Box>
-          </CardContent>
-        </Card>
-      </Grid>
-
-      {/* Disk Space */}
-      <Grid item xs={12}>
+      {/* Left side - Disk Space */}
+      <Grid item xs={12} md={4}>
         <Card>
           <CardContent>
             <Typography variant="h6" gutterBottom>
@@ -304,6 +345,101 @@ export default function SystemMonitor() {
             </Box>
           </CardContent>
         </Card>
+      </Grid>
+
+      {/* Right side - All Charts */}
+      <Grid item xs={12} md={8}>
+        <Grid container spacing={2}>
+          {/* CPU Real-time */}
+          <Grid item xs={12}>
+            <Card>
+              <CardContent>
+                <Typography variant="subtitle1" gutterBottom>
+                  CPU használat (valós idejű - 2mp)
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {systemInfo.cpu.percent.toFixed(1)}% | {systemInfo.cpu.cores} mag, {systemInfo.cpu.threads} szál
+                </Typography>
+                <Box sx={{ height: 120, mt: 1 }}>
+                  <Line data={realtimeCpuData} options={realtimeChartOptions} />
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* RAM Real-time */}
+          <Grid item xs={12}>
+            <Card>
+              <CardContent>
+                <Typography variant="subtitle1" gutterBottom>
+                  RAM használat (valós idejű - 2mp)
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {formatBytes(systemInfo.memory.free)} szabad / {formatBytes(systemInfo.memory.total)}
+                </Typography>
+                <Box sx={{ height: 120, mt: 1 }}>
+                  <Line data={realtimeMemoryData} options={realtimeChartOptions} />
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Network Real-time */}
+          <Grid item xs={12}>
+            <Card>
+              <CardContent>
+                <Typography variant="subtitle1" gutterBottom>
+                  Hálózat (valós idejű - 2mp)
+                </Typography>
+                <Box sx={{ height: 120, mt: 1 }}>
+                  <Line data={realtimeNetworkData} options={networkChartOptions} />
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* CPU History */}
+          <Grid item xs={12}>
+            <Card>
+              <CardContent>
+                <Typography variant="subtitle1" gutterBottom>
+                  CPU történet (2 óra - 2 perces minták)
+                </Typography>
+                <Box sx={{ height: 150, mt: 1 }}>
+                  <Line data={historyCpuData} options={historyChartOptions} />
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* RAM History */}
+          <Grid item xs={12}>
+            <Card>
+              <CardContent>
+                <Typography variant="subtitle1" gutterBottom>
+                  RAM történet (2 óra - 2 perces minták)
+                </Typography>
+                <Box sx={{ height: 150, mt: 1 }}>
+                  <Line data={historyMemoryData} options={historyChartOptions} />
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Network History */}
+          <Grid item xs={12}>
+            <Card>
+              <CardContent>
+                <Typography variant="subtitle1" gutterBottom>
+                  Hálózat történet (2 óra - 2 perces minták)
+                </Typography>
+                <Box sx={{ height: 150, mt: 1 }}>
+                  <Line data={historyNetworkData} options={networkHistoryOptions} />
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
       </Grid>
     </Grid>
   )
