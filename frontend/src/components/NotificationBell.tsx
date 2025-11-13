@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import {
   IconButton, Badge, Menu, MenuItem, Typography, Box,
-  Divider, ListItemIcon, ListItemText, Chip
+  Divider, ListItemIcon, ListItemText, Chip, Dialog,
+  DialogTitle, DialogContent, DialogActions, Button
 } from '@mui/material'
 import NotificationsIcon from '@mui/icons-material/Notifications'
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead'
@@ -10,6 +11,7 @@ import WarningIcon from '@mui/icons-material/Warning'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import ErrorIcon from '@mui/icons-material/Error'
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber'
+import CloseIcon from '@mui/icons-material/Close'
 import api from '../services/api'
 
 interface Notification {
@@ -26,6 +28,8 @@ export default function NotificationBell() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
+  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null)
+  const [dialogOpen, setDialogOpen] = useState(false)
 
   useEffect(() => {
     fetchUnreadCount()
@@ -88,6 +92,40 @@ export default function NotificationBell() {
     }
   }
 
+  const handleNotificationClick = (notification: Notification) => {
+    // Mark as read
+    if (!notification.read) {
+      markAsRead(notification.id)
+    }
+    
+    // Show dialog with full content
+    setSelectedNotification(notification)
+    setDialogOpen(true)
+    handleClose()
+  }
+
+  const handleDialogClose = () => {
+    setDialogOpen(false)
+    setSelectedNotification(null)
+  }
+
+  const handleDialogAction = () => {
+    if (selectedNotification?.link) {
+      window.location.href = selectedNotification.link
+    }
+    handleDialogClose()
+  }
+
+  const getDialogColor = (type: string) => {
+    switch (type) {
+      case 'success': return 'success.main'
+      case 'warning': return 'warning.main'
+      case 'error': return 'error.main'
+      case 'token': return 'secondary.main'
+      default: return 'info.main'
+    }
+  }
+
   const getIcon = (type: string) => {
     switch (type) {
       case 'info': return <InfoIcon fontSize="small" color="info" />
@@ -145,15 +183,7 @@ export default function NotificationBell() {
           notifications.map((notification) => (
             <MenuItem
               key={notification.id}
-              onClick={() => {
-                if (!notification.read) {
-                  markAsRead(notification.id)
-                }
-                if (notification.link) {
-                  window.location.href = notification.link
-                }
-                handleClose()
-              }}
+              onClick={() => handleNotificationClick(notification)}
               sx={{
                 backgroundColor: notification.read ? 'transparent' : 'action.hover',
                 flexDirection: 'column',
@@ -202,6 +232,60 @@ export default function NotificationBell() {
           </>
         )}
       </Menu>
+
+      {/* Notification Dialog */}
+      <Dialog
+        open={dialogOpen}
+        onClose={handleDialogClose}
+        maxWidth="sm"
+        fullWidth
+      >
+        {selectedNotification && (
+          <>
+            <DialogTitle
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                borderBottom: 1,
+                borderColor: 'divider',
+                color: getDialogColor(selectedNotification.type),
+              }}
+            >
+              {getIcon(selectedNotification.type)}
+              <Typography variant="h6" component="span" sx={{ flex: 1 }}>
+                {selectedNotification.title}
+              </Typography>
+            </DialogTitle>
+            <DialogContent sx={{ mt: 2 }}>
+              <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
+                {selectedNotification.message}
+              </Typography>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: 'block', mt: 2 }}
+              >
+                {new Date(selectedNotification.created_at).toLocaleString('hu-HU')}
+              </Typography>
+            </DialogContent>
+            <DialogActions>
+              {selectedNotification.link && (
+                <Button onClick={handleDialogAction} variant="contained">
+                  Megnyitás
+                </Button>
+              )}
+              <Button
+                onClick={handleDialogClose}
+                variant="outlined"
+                startIcon={<CloseIcon />}
+              >
+                Bezárás
+              </Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
     </>
   )
 }

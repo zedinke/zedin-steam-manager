@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Container, Paper, Typography, Box, Button, TextField,
+  Container, Typography, Box, Button, TextField,
   Alert, CircularProgress, Card, CardContent, Grid
 } from '@mui/material'
 import VpnKeyIcon from '@mui/icons-material/VpnKey'
@@ -26,7 +26,7 @@ export default function TokenActivatePage() {
 
     try {
       const token = localStorage.getItem('token')
-      const response = await api.post('/tokens/activate', {
+      await api.post('/tokens/activate', {
         token_code: tokenCode.trim()
       }, {
         params: { token }

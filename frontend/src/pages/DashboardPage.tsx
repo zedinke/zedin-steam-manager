@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Container, Paper, Typography, Box, Button, Grid,
+  Container, Typography, Box, Button, Grid,
   AppBar, Toolbar, IconButton, Card, CardContent,
   Alert, CircularProgress, Chip
 } from '@mui/material'

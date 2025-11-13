@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Container, Paper, Typography, Box, Button, TextField,
+  Container, Typography, Box, Button, TextField,
   Alert, CircularProgress, Select, MenuItem, FormControl,
   InputLabel, Card, CardContent, Grid
 } from '@mui/material'
@@ -17,7 +17,7 @@ interface User {
 
 export default function TokenGeneratePage() {
   const navigate = useNavigate()
-  const [users, setUsers] = useState<User[]>([])
+  const [, setUsers] = useState<User[]>([])
   const [selectedUserId, setSelectedUserId] = useState('')
   const [durationDays, setDurationDays] = useState(365)
   const [loading, setLoading] = useState(false)
@@ -37,7 +37,7 @@ export default function TokenGeneratePage() {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem('token')
+      localStorage.getItem('token')
       // TODO: Implement /api/auth/users endpoint to list users with server_admin and user roles
       // For now, we'll use a placeholder
       setUsers([])
