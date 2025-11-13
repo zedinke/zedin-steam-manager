@@ -9,6 +9,7 @@ import LogoutIcon from '@mui/icons-material/Logout'
 import UpdateIcon from '@mui/icons-material/Update'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import api from '../services/api'
+import SystemMonitor from '../components/SystemMonitor'
 
 export default function DashboardPage() {
   const navigate = useNavigate()
@@ -136,13 +137,9 @@ export default function DashboardPage() {
             </Card>
           </Grid>
 
-          {/* Placeholder for future modules */}
+          {/* System Monitoring */}
           <Grid item xs={12}>
-            <Paper sx={{ p: 3, textAlign: 'center' }}>
-              <Typography variant="h6" color="text.secondary">
-                Additional features coming in future modules...
-              </Typography>
-            </Paper>
+            <SystemMonitor />
           </Grid>
         </Grid>
       </Container>
