@@ -172,6 +172,7 @@ download_app() {
         cd $INSTALL_DIR
         sudo -u $SERVICE_USER git fetch origin
         sudo -u $SERVICE_USER git reset --hard origin/main
+        sudo -u $SERVICE_USER git clean -fdx
         sudo chown -R $SERVICE_USER:$SERVICE_USER $INSTALL_DIR
     else
         # Fresh installation - try to copy from current directory first
@@ -224,17 +225,42 @@ deploy_frontend() {
     cd $INSTALL_DIR/frontend
     
     # Clean any potential old files or caches
-    log "Cleaning frontend build cache..."
+    log "Cleaning frontend build cache and old files..."
     sudo -u $SERVICE_USER rm -rf .vite node_modules/.vite dist 2>/dev/null || true
+    
+    # Remove any untracked files from git that shouldn't be there
+    if [ -d ".git" ]; then
+        log "Removing untracked files from git repository..."
+        cd $INSTALL_DIR
+        sudo -u $SERVICE_USER git clean -fdx frontend/src/
+        cd $INSTALL_DIR/frontend
+    fi
+    
+    # Verify clean state
+    log "Verifying frontend source structure..."
+    if [ -f "src/App.tsx" ] && [ -f "src/main.tsx" ] && [ -f "src/index.css" ]; then
+        SRC_FILE_COUNT=$(find src -type f | wc -l)
+        if [ "$SRC_FILE_COUNT" -gt 3 ]; then
+            warning "Found $SRC_FILE_COUNT files in src/, expected only 3 (App.tsx, main.tsx, index.css)"
+            log "Listing unexpected files:"
+            find src -type f | grep -v -E '(App\.tsx|main\.tsx|index\.css)$' || true
+            
+            # Force clean
+            log "Force cleaning src directory..."
+            cd $INSTALL_DIR
+            sudo -u $SERVICE_USER git checkout HEAD -- frontend/src/
+            sudo -u $SERVICE_USER git clean -fdx frontend/src/
+            cd $INSTALL_DIR/frontend
+        else
+            log "✓ Source structure is clean ($SRC_FILE_COUNT files)"
+        fi
+    else
+        error "Missing required frontend source files (App.tsx, main.tsx, or index.css)"
+    fi
     
     # Check if we have source code or pre-built dist
     if [ -f "package.json" ] && [ -d "src" ]; then
         log "Building React frontend from source..."
-        
-        # Verify src structure
-        if [ ! -f "src/App.tsx" ] || [ ! -f "src/main.tsx" ]; then
-            error "Invalid frontend source structure - missing core files"
-        fi
         
         # Install dependencies
         log "Installing frontend dependencies..."
