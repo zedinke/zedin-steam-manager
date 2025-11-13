@@ -1,11 +1,9 @@
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, ForeignKey, Enum
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime, timedelta
 import enum
 import uuid
-
-Base = declarative_base()
+from .base import Base
 
 class TokenType(str, enum.Enum):
     TRIAL = "trial"           # 30 napos próbaverzió
