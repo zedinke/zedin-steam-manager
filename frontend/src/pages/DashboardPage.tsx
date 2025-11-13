@@ -16,6 +16,7 @@ import ServerIcon from '@mui/icons-material/Storage'
 import SettingsIcon from '@mui/icons-material/Settings'
 import api from '../services/api'
 import SystemMonitor from '../components/SystemMonitor'
+import SystemInfo from '../components/SystemInfo'
 import NotificationBell from '../components/NotificationBell'
 
 export default function DashboardPage() {
@@ -117,10 +118,10 @@ export default function DashboardPage() {
         )}
 
         <Grid container spacing={3}>
-          {/* Left Sidebar - System Monitor + Menu */}
+          {/* Left Sidebar - System Info + Menu */}
           <Grid item xs={12} md={3}>
-            {/* System Monitor */}
-            <SystemMonitor />
+            {/* System Information */}
+            {user && <SystemInfo user={user} />}
 
             {/* Menu */}
             <Card sx={{ mt: 2 }}>
@@ -180,7 +181,7 @@ export default function DashboardPage() {
           </Grid>
 
           {/* Center Content */}
-          <Grid item xs={12} md={9}>
+          <Grid item xs={12} md={6}>
             <Grid container spacing={3}>
               {/* Git Update Card */}
               <Grid item xs={12}>
@@ -214,28 +215,7 @@ export default function DashboardPage() {
                 </Card>
               </Grid>
 
-              {/* System Info Card */}
-              <Grid item xs={12}>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h6">System Information</Typography>
-                    <Box sx={{ mt: 2 }}>
-                      <Typography variant="body2" color="text.secondary">
-                        Version: 0.0.3-final
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Module: 1.5 (Token & Notification System)
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Email: {user?.email}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Role: {user?.role === 'manager_admin' ? 'Manager Admin' : user?.role === 'server_admin' ? 'Server Admin' : 'User'}
-                      </Typography>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
+              {/* System Info Card - REMOVED, now in sidebar */}
 
               {/* Token Expiry Card (Server Admin Only) */}
               {user?.role === 'server_admin' && tokenExpiry && (
@@ -264,6 +244,11 @@ export default function DashboardPage() {
                 </Grid>
               )}
             </Grid>
+          </Grid>
+
+          {/* Right Sidebar - System Monitoring */}
+          <Grid item xs={12} md={3}>
+            <SystemMonitor />
           </Grid>
         </Grid>
       </Container>
