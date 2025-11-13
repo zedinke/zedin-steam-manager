@@ -12,8 +12,12 @@ export default function VerifyEmailPage() {
   const navigate = useNavigate()
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [message, setMessage] = useState('')
+  const [hasVerified, setHasVerified] = useState(false)
 
   useEffect(() => {
+    // Prevent double verification
+    if (hasVerified) return
+
     const token = searchParams.get('token')
     
     if (!token) {
@@ -22,8 +26,9 @@ export default function VerifyEmailPage() {
       return
     }
 
+    setHasVerified(true)
     verifyEmail(token)
-  }, [searchParams])
+  }, []) // Empty dependency array - only run once on mount
 
   const verifyEmail = async (token: string) => {
     try {
