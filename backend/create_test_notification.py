@@ -12,10 +12,18 @@ load_dotenv()
 # Get Supabase client
 from supabase import create_client
 
+# Use service role key for admin operations
+service_key = os.getenv('SUPABASE_SERVICE_KEY')
+if not service_key:
+    print("❌ SUPABASE_SERVICE_KEY not found in environment")
+    sys.exit(1)
+
 supabase = create_client(
     os.getenv('SUPABASE_URL'),
-    os.getenv('SUPABASE_SERVICE_KEY')
+    service_key
 )
+
+print(f"✅ Supabase client initialized with service role")
 
 def create_test_notification():
     try:
