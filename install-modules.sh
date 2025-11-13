@@ -330,9 +330,10 @@ EOF
     sudo chown $SERVICE_USER:$SERVICE_USER /etc/zedin/zsmanager.env
     sudo chmod 640 /etc/zedin/zsmanager.env
     
-    # Create backend .env symlink
-    sudo ln -sf /etc/zedin/zsmanager.env $INSTALL_DIR/backend/.env
-    sudo chown -h $SERVICE_USER:$SERVICE_USER $INSTALL_DIR/backend/.env
+    # Copy .env to backend directory (instead of symlink to avoid permission issues)
+    sudo cp /etc/zedin/zsmanager.env $INSTALL_DIR/backend/.env
+    sudo chown $SERVICE_USER:$SERVICE_USER $INSTALL_DIR/backend/.env
+    sudo chmod 640 $INSTALL_DIR/backend/.env
     
     log "✅ Configuration created"
 }
@@ -771,15 +772,19 @@ init_database() {
     sudo chown $SERVICE_USER:$SERVICE_USER /var/lib/zedin
     sudo chmod 755 /var/lib/zedin
     
-    # Ensure .env symlink exists
-    if [ ! -L "$INSTALL_DIR/backend/.env" ]; then
-        log "Creating .env symlink..."
-        sudo ln -sf /etc/zedin/zsmanager.env $INSTALL_DIR/backend/.env
+    # Ensure .env file exists in backend directory
+    if [ ! -f "$INSTALL_DIR/backend/.env" ]; then
+        log "Copying .env to backend..."
+        sudo cp /etc/zedin/zsmanager.env $INSTALL_DIR/backend/.env
+        sudo chown $SERVICE_USER:$SERVICE_USER $INSTALL_DIR/backend/.env
+        sudo chmod 640 $INSTALL_DIR/backend/.env
     fi
     
     # Verify config file permissions
     sudo chown $SERVICE_USER:$SERVICE_USER /etc/zedin/zsmanager.env
     sudo chmod 640 /etc/zedin/zsmanager.env
+    sudo chown $SERVICE_USER:$SERVICE_USER $INSTALL_DIR/backend/.env
+    sudo chmod 640 $INSTALL_DIR/backend/.env
     
     sudo -u $SERVICE_USER bash << 'EOF'
 cd /opt/zedin-steam-manager
