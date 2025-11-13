@@ -637,13 +637,12 @@ async def send_password_reset_email(email: str, username: str, reset_token: str)
                                     </td>
                                 </tr>
                             </table>
-                                """
-                                <ul style="margin: 0; padding-left: 20px; color: #856404; font-size: 14px; line-height: 1.8;">
-                                    <li>Ez a link 1 órán belül lejár</li>
-                                    <li>Csak egyszer használható</li>
-                                    <li>Ha nem te kérted, hagyd figyelmen kívül ezt az emailt</li>
-                                    <li>Soha ne oszd meg ezt a linket senkivel</li>
-                                </ul>
+                                    <ul style="margin: 0; padding-left: 20px; color: #856404; font-size: 14px; line-height: 1.8;">
+                                        <li>Ez a link 1 órán belül lejár</li>
+                                        <li>Csak egyszer használható</li>
+                                        <li>Ha nem te kérted, hagyd figyelmen kívül ezt az emailt</li>
+                                        <li>Soha ne oszd meg ezt a linket senkivel</li>
+                                    </ul>
                             </div>
                             <div style="background: #d1ecf1; border-left: 4px solid #0c5460; padding: 20px; border-radius: 8px; margin: 30px 0;">
                                 <p style="margin: 0; color: #0c5460; font-size: 14px; line-height: 1.6;">
