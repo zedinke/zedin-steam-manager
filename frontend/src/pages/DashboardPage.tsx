@@ -3,13 +3,17 @@ import { useNavigate } from 'react-router-dom'
 import {
   Container, Typography, Box, Button, Grid,
   AppBar, Toolbar, IconButton, Card, CardContent,
-  Alert, CircularProgress, Chip
+  Alert, CircularProgress, Chip, List, ListItemButton,
+  ListItemIcon, ListItemText, Divider
 } from '@mui/material'
 import LogoutIcon from '@mui/icons-material/Logout'
 import UpdateIcon from '@mui/icons-material/Update'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber'
 import VpnKeyIcon from '@mui/icons-material/VpnKey'
+import DashboardIcon from '@mui/icons-material/Dashboard'
+import ServerIcon from '@mui/icons-material/Storage'
+import SettingsIcon from '@mui/icons-material/Settings'
 import api from '../services/api'
 import SystemMonitor from '../components/SystemMonitor'
 import NotificationBell from '../components/NotificationBell'
@@ -113,43 +117,70 @@ export default function DashboardPage() {
         )}
 
         <Grid container spacing={3}>
-          {/* Left Sidebar - Menu */}
-          <Grid item xs={12} md={2}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Menü
-                </Typography>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 2 }}>
+          {/* Left Sidebar - System Monitor + Menu */}
+          <Grid item xs={12} md={3}>
+            {/* System Monitor */}
+            <SystemMonitor />
+
+            {/* Menu */}
+            <Card sx={{ mt: 2 }}>
+              <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
+                <List disablePadding>
+                  <ListItemButton onClick={() => navigate('/dashboard')}>
+                    <ListItemIcon>
+                      <DashboardIcon color="primary" />
+                    </ListItemIcon>
+                    <ListItemText primary="Dashboard" />
+                  </ListItemButton>
+                  
+                  <Divider />
+                  
+                  <ListItemButton>
+                    <ListItemIcon>
+                      <ServerIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Szerver Kezelés" secondary="Hamarosan" />
+                  </ListItemButton>
+                  
+                  <Divider />
+                  
                   {user?.role === 'manager_admin' && (
-                    <Button
-                      variant="outlined"
-                      startIcon={<ConfirmationNumberIcon />}
-                      size="small"
-                      onClick={() => navigate('/tokens/generate')}
-                      fullWidth
-                    >
-                      Token Generálás
-                    </Button>
+                    <>
+                      <ListItemButton onClick={() => navigate('/tokens/generate')}>
+                        <ListItemIcon>
+                          <ConfirmationNumberIcon color="secondary" />
+                        </ListItemIcon>
+                        <ListItemText primary="Token Generálás" />
+                      </ListItemButton>
+                      <Divider />
+                    </>
                   )}
+                  
                   {(user?.role === 'user' || user?.role === 'server_admin') && (
-                    <Button
-                      variant="outlined"
-                      startIcon={<VpnKeyIcon />}
-                      size="small"
-                      onClick={() => navigate('/tokens/activate')}
-                      fullWidth
-                    >
-                      Token Aktiválás
-                    </Button>
+                    <>
+                      <ListItemButton onClick={() => navigate('/tokens/activate')}>
+                        <ListItemIcon>
+                          <VpnKeyIcon color="secondary" />
+                        </ListItemIcon>
+                        <ListItemText primary="Token Aktiválás" />
+                      </ListItemButton>
+                      <Divider />
+                    </>
                   )}
-                </Box>
+                  
+                  <ListItemButton>
+                    <ListItemIcon>
+                      <SettingsIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Beállítások" secondary="Hamarosan" />
+                  </ListItemButton>
+                </List>
               </CardContent>
             </Card>
           </Grid>
 
           {/* Center Content */}
-          <Grid item xs={12} md={7}>
+          <Grid item xs={12} md={9}>
             <Grid container spacing={3}>
               {/* Git Update Card */}
               <Grid item xs={12}>
@@ -233,11 +264,6 @@ export default function DashboardPage() {
                 </Grid>
               )}
             </Grid>
-          </Grid>
-
-          {/* Right Sidebar - System Monitoring */}
-          <Grid item xs={12} md={3}>
-            <SystemMonitor />
           </Grid>
         </Grid>
       </Container>
