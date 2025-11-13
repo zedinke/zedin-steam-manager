@@ -88,26 +88,29 @@ async def verify_email(request: VerifyEmailRequest):
             raise HTTPException(status_code=400, detail="Invalid or expired verification token")
         
         verification = result.data[0]
+        user_id = verification["user_id"]
         
-        # Update user as verified
-        supabase.auth.admin.update_user_by_id(
-            verification["user_id"],
-            {"email_verified": True}
-        )
-        
-        # Delete verification token
+        # Delete verification token (marks as verified)
         supabase.table("email_verifications")\
             .delete()\
             .eq("token", request.token)\
             .execute()
         
-        return {"message": "Email verified successfully. You can now login."}
+        # For now, we'll consider the user verified if the token was found and deleted
+        # In production, you might want to update user metadata via admin API
+        
+        return {
+            "message": "Email verified successfully. You can now login.",
+            "user_id": user_id
+        }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/login")
 async def login(request: LoginRequest):
-    """Login with email verification check"""
+    """Login - check if email was verified via token"""
     supabase = get_supabase()
     
     try:
@@ -118,11 +121,16 @@ async def login(request: LoginRequest):
         })
         
         if response.user:
-            # Check if email is verified
-            if not response.user.user_metadata.get("email_verified", False):
+            # Check if there's still a pending verification token
+            pending = supabase.table("email_verifications")\
+                .select("id")\
+                .eq("user_id", response.user.id)\
+                .execute()
+            
+            if pending.data and len(pending.data) > 0:
                 raise HTTPException(
                     status_code=403,
-                    detail="Please verify your email before logging in"
+                    detail="Please verify your email before logging in. Check your email for the verification link."
                 )
             
             # Create JWT token
@@ -141,6 +149,8 @@ async def login(request: LoginRequest):
                     "username": response.user.user_metadata.get("username")
                 }
             }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
