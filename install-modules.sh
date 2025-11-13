@@ -765,6 +765,21 @@ EOF
 init_database() {
     log "Initializing database..."
     
+    # Ensure database directory exists with proper permissions
+    sudo mkdir -p /var/lib/zedin
+    sudo chown $SERVICE_USER:$SERVICE_USER /var/lib/zedin
+    sudo chmod 755 /var/lib/zedin
+    
+    # Ensure .env symlink exists
+    if [ ! -L "$INSTALL_DIR/backend/.env" ]; then
+        log "Creating .env symlink..."
+        sudo ln -sf /etc/zedin/zsmanager.env $INSTALL_DIR/backend/.env
+    fi
+    
+    # Verify config file permissions
+    sudo chown root:$SERVICE_USER /etc/zedin/zsmanager.env
+    sudo chmod 640 /etc/zedin/zsmanager.env
+    
     sudo -u $SERVICE_USER bash << 'EOF'
 cd /opt/zedin-steam-manager
 source venv/bin/activate
