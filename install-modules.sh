@@ -194,58 +194,123 @@ download_app() {
 
 # Install backend
 install_backend() {
-    log "Installing Python backend..."
+    log "PHASE 4: Installing Python backend..."
     
     cd $INSTALL_DIR
+    
+    # Create virtual environment
+    log "Creating Python virtual environment..."
     sudo -u $SERVICE_USER python3 -m venv venv
-    sudo -u $SERVICE_USER bash -c "source venv/bin/activate && cd backend && pip install -r requirements.txt"
+    
+    # Install backend dependencies
+    log "Installing backend dependencies..."
+    if [ ! -f "backend/requirements.txt" ]; then
+        error "backend/requirements.txt not found"
+    fi
+    
+    sudo -u $SERVICE_USER bash -c "source venv/bin/activate && cd backend && pip install --upgrade pip && pip install -r requirements.txt"
+    
+    # Verify critical packages
+    log "Verifying installation..."
+    sudo -u $SERVICE_USER bash -c "source venv/bin/activate && python -c 'import fastapi, uvicorn, sqlalchemy; print(\"✓ Core packages OK\")'" || error "Failed to import core packages"
     
     log "✅ Backend installed"
 }
 
 # Deploy frontend
 deploy_frontend() {
-    log "Deploying frontend..."
+    log "PHASE 5: Deploying frontend..."
     
-    # Copy minimal frontend as main index
-    if [ -f "$INSTALL_DIR/minimal-frontend.html" ]; then
-        log "Using minimal frontend solution for maximum compatibility"
-        sudo cp "$INSTALL_DIR/minimal-frontend.html" "$INSTALL_DIR/frontend/dist/index.html"
-    elif [ ! -f "$INSTALL_DIR/frontend/dist/index.html" ]; then
-        error "Frontend build not found. Repository sync issue."
+    cd $INSTALL_DIR/frontend
+    
+    # Check if we have source code or pre-built dist
+    if [ -f "package.json" ] && [ -d "src" ]; then
+        log "Building React frontend from source..."
+        
+        # Install dependencies
+        log "Installing frontend dependencies..."
+        sudo -u $SERVICE_USER npm install
+        
+        # Build production version
+        log "Building production bundle..."
+        sudo -u $SERVICE_USER npm run build
+        
+        if [ ! -d "dist" ] || [ ! -f "dist/index.html" ]; then
+            error "Frontend build failed - dist directory not created"
+        fi
+        
+        log "✅ Frontend built successfully"
+    elif [ -d "dist" ] && [ -f "dist/index.html" ]; then
+        log "Using pre-built frontend from dist/"
+        log "✅ Frontend ready"
+    else
+        error "Frontend structure not found - neither source (package.json + src/) nor pre-built (dist/) exists"
     fi
     
+    # Ensure proper ownership
     sudo chown -R $SERVICE_USER:$SERVICE_USER $INSTALL_DIR/frontend
+    
     log "✅ Frontend deployed"
 }
 
 # Create configurations
 create_config() {
-    log "Creating configuration files..."
+    log "PHASE 6: Creating configuration files..."
+    
+    # Create main config directory
+    sudo mkdir -p /etc/zedin
     
     # Environment file
+    log "Creating environment configuration..."
     sudo tee /etc/zedin/zsmanager.env > /dev/null << EOF
+# Zedin Steam Manager Configuration
 APP_NAME=Zedin Steam Manager
 VERSION=0.000001
 DEBUG=False
 HOST=0.0.0.0
 PORT=8000
-DATABASE_URL=sqlite:///var/lib/zedin/zedin_steam_manager.db
+
+# Database
+DATABASE_URL=sqlite:////var/lib/zedin/zedin_steam_manager.db
+
+# Security
 SECRET_KEY=$(openssl rand -hex 32)
+ACCESS_TOKEN_EXPIRE_MINUTES=43200
+
+# CORS
+ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+
+# Email (optional - disabled by default)
+EMAIL_ENABLED=False
+# SMTP_SERVER=smtp.gmail.com
+# SMTP_PORT=587
+# SMTP_USERNAME=your_email@gmail.com
+# SMTP_PASSWORD=your_app_password
+# EMAIL_FROM=noreply@zedinsteammanager.com
+
+# Logging
+LOG_LEVEL=INFO
 EOF
     
     sudo chmod 640 /etc/zedin/zsmanager.env
+    sudo chown root:$SERVICE_USER /etc/zedin/zsmanager.env
+    
+    # Create backend .env symlink
+    sudo ln -sf /etc/zedin/zsmanager.env $INSTALL_DIR/backend/.env
+    
     log "✅ Configuration created"
 }
 
 # Setup services
 setup_services() {
-    log "Setting up systemd services..."
+    log "PHASE 7: Setting up systemd services..."
     
     # Backend service
+    log "Creating backend service..."
     sudo tee /etc/systemd/system/zsmanager-backend.service > /dev/null << EOF
 [Unit]
-Description=Zedin Steam Manager Backend
+Description=Zedin Steam Manager Backend API
+Documentation=https://github.com/zedinke/zedin-steam-manager
 After=network.target
 
 [Service]
@@ -253,12 +318,25 @@ Type=simple
 User=$SERVICE_USER
 Group=$SERVICE_USER
 WorkingDirectory=$INSTALL_DIR/backend
-Environment=PATH=$INSTALL_DIR/venv/bin
+Environment=PATH=$INSTALL_DIR/venv/bin:/usr/local/bin:/usr/bin:/bin
 EnvironmentFile=/etc/zedin/zsmanager.env
-ExecStart=$INSTALL_DIR/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+ExecStart=$INSTALL_DIR/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
 Restart=always
 RestartSec=3
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=zsmanager-backend
+
+# Security settings
 NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/zedin /opt/zedin-steam-manager/backend/logs
+
+# Resource limits
+LimitNOFILE=65535
+LimitNPROC=4096
 
 [Install]
 WantedBy=multi-user.target
@@ -269,43 +347,89 @@ EOF
 
 # Configure nginx
 setup_nginx() {
-    log "Configuring Nginx..."
+    log "PHASE 8: Configuring Nginx..."
     
     sudo tee /etc/nginx/sites-available/zsmanager > /dev/null << 'EOF'
+# Zedin Steam Manager - Nginx Configuration
 server {
     listen 80 default_server;
+    listen [::]:80 default_server;
     server_name _;
+    
+    # Frontend static files
     root /opt/zedin-steam-manager/frontend/dist;
     index index.html;
-
+    
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    
+    # Frontend - React Router support
     location / {
         try_files $uri $uri/ /index.html;
-        add_header Cache-Control "no-cache";
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+        add_header Pragma "no-cache";
+        add_header Expires "0";
     }
-
+    
+    # Static assets caching
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+    
+    # Backend API
     location /api/ {
         proxy_pass http://127.0.0.1:8000/api/;
+        proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 300s;
+        proxy_connect_timeout 75s;
     }
-
-    location /health {
-        proxy_pass http://127.0.0.1:8000/health;
+    
+    # Health check
+    location /api/health {
+        proxy_pass http://127.0.0.1:8000/api/health;
+        access_log off;
     }
-
+    
+    # API documentation
     location /docs {
         proxy_pass http://127.0.0.1:8000/docs;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+    
+    location /openapi.json {
+        proxy_pass http://127.0.0.1:8000/openapi.json;
+        proxy_set_header Host $host;
+    }
+    
+    # Deny access to sensitive files
+    location ~ /\. {
+        deny all;
+        access_log off;
+        log_not_found off;
     }
 }
 EOF
 
+    # Remove default site if exists
     sudo rm -f /etc/nginx/sites-enabled/default
+    
+    # Enable our site
     sudo ln -sf /etc/nginx/sites-available/zsmanager /etc/nginx/sites-enabled/
     
+    # Test nginx configuration
+    log "Testing Nginx configuration..."
     if ! sudo nginx -t; then
-        error "Nginx configuration test failed"
+        error "Nginx configuration test failed - check syntax"
     fi
     
     log "✅ Nginx configured"
@@ -313,36 +437,81 @@ EOF
 
 # Initialize database
 init_database() {
-    log "Initializing database..."
+    log "PHASE 9: Initializing database..."
     
+    # Ensure database directory exists
+    sudo mkdir -p /var/lib/zedin
+    sudo chown $SERVICE_USER:$SERVICE_USER /var/lib/zedin
+    
+    # Initialize database schema
+    log "Creating database tables..."
     sudo -u $SERVICE_USER bash << 'EOF'
 cd /opt/zedin-steam-manager
 source venv/bin/activate
 cd backend
-python3 -c "
+
+python3 << PYEOF
+import sys
 try:
     from config.database import engine
     from models import base
+    
+    # Create all tables
     base.Base.metadata.create_all(bind=engine)
-    print('✅ Database initialized')
+    
+    print("✅ Database schema created successfully")
+    sys.exit(0)
 except Exception as e:
-    print(f'❌ Database initialization failed: {e}')
-    exit(1)
-"
+    print(f"❌ Database initialization failed: {e}")
+    import traceback
+    traceback.print_exc()
+    sys.exit(1)
+PYEOF
 EOF
+    
+    if [ $? -ne 0 ]; then
+        error "Database initialization failed"
+    fi
+    
+    log "✅ Database initialized"
 }
 
 # Start services
 start_services() {
-    log "Starting services..."
+    log "PHASE 10: Starting services..."
     
+    # Reload systemd
+    log "Reloading systemd daemon..."
     sudo systemctl daemon-reload
+    
+    # Enable and start backend
+    log "Starting backend service..."
     sudo systemctl enable zsmanager-backend
     sudo systemctl start zsmanager-backend
+    
+    # Wait for backend to start
+    sleep 5
+    
+    # Check backend status
+    if sudo systemctl is-active --quiet zsmanager-backend; then
+        log "✅ Backend service started"
+    else
+        warning "Backend service may have issues - checking logs..."
+        sudo journalctl -u zsmanager-backend -n 20 --no-pager
+        error "Backend failed to start - check logs above"
+    fi
+    
+    # Restart nginx
+    log "Restarting Nginx..."
     sudo systemctl restart nginx
     
-    sleep 5
-    log "✅ Services started"
+    if sudo systemctl is-active --quiet nginx; then
+        log "✅ Nginx started"
+    else
+        error "Nginx failed to start"
+    fi
+    
+    log "✅ All services started"
 }
 
 # Check service status
