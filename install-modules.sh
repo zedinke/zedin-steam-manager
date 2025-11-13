@@ -207,7 +207,11 @@ install_backend() {
 deploy_frontend() {
     log "Deploying frontend..."
     
-    if [ ! -f "$INSTALL_DIR/frontend/dist/index.html" ]; then
+    # Copy minimal frontend as main index
+    if [ -f "$INSTALL_DIR/minimal-frontend.html" ]; then
+        log "Using minimal frontend solution for maximum compatibility"
+        sudo cp "$INSTALL_DIR/minimal-frontend.html" "$INSTALL_DIR/frontend/dist/index.html"
+    elif [ ! -f "$INSTALL_DIR/frontend/dist/index.html" ]; then
         error "Frontend build not found. Repository sync issue."
     fi
     
