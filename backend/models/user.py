@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, Enum
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
 from passlib.context import CryptContext
@@ -30,6 +31,22 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     last_login = Column(DateTime, nullable=True)
+    
+    # Relationships
+    tokens = relationship("UserToken", back_populates="user")
+    
+    @property
+    def active_token(self):
+        """Get the user's active token"""
+        for token in self.tokens:
+            if token.is_valid:
+                return token
+        return None
+    
+    @property
+    def has_valid_license(self):
+        """Check if user has a valid license"""
+        return self.active_token is not None
     
     def verify_password(self, password: str) -> bool:
         return pwd_context.verify(password, self.hashed_password)
