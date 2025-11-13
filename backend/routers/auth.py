@@ -23,7 +23,7 @@ class VerifyEmailRequest(BaseModel):
 
 def create_access_token(data: dict):
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(days=30)
+    expire = datetime.utcnow() + timedelta(hours=72)  # 72 hours = 3 days
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, os.getenv("JWT_SECRET"), algorithm="HS256")
 

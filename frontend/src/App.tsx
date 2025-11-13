@@ -3,16 +3,13 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import VerifyEmailPage from './pages/VerifyEmailPage'
 import DashboardPage from './pages/DashboardPage'
-import { useEffect, useState } from 'react'
+
+function PrivateRoute({ children }: { children: JSX.Element }) {
+  const token = localStorage.getItem('token')
+  return token ? children : <Navigate to="/login" replace />
+}
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-
-  useEffect(() => {
-    const token = localStorage.getItem('token')
-    setIsAuthenticated(!!token)
-  }, [])
-
   return (
     <BrowserRouter>
       <Routes>
@@ -21,9 +18,13 @@ function App() {
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route 
           path="/dashboard" 
-          element={isAuthenticated ? <DashboardPage /> : <Navigate to="/login" />} 
+          element={
+            <PrivateRoute>
+              <DashboardPage />
+            </PrivateRoute>
+          } 
         />
-        <Route path="/" element={<Navigate to="/dashboard" />} />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>
   )
