@@ -788,6 +788,12 @@ init_database() {
     sudo chown $SERVICE_USER:$SERVICE_USER $INSTALL_DIR/backend/.env
     sudo chmod 640 $INSTALL_DIR/backend/.env
     
+    # Clean Python cache to avoid stale imports
+    log "Cleaning Python cache..."
+    cd $INSTALL_DIR/backend
+    sudo -u $SERVICE_USER find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+    sudo -u $SERVICE_USER find . -type f -name "*.pyc" -delete 2>/dev/null || true
+    
     sudo -u $SERVICE_USER bash << 'EOF'
 cd /opt/zedin-steam-manager
 source venv/bin/activate
