@@ -3,6 +3,7 @@ from pydantic import BaseModel, EmailStr
 from datetime import datetime, timedelta
 from jose import jwt
 import os
+from gotrue.errors import AuthApiError
 from services.supabase_client import get_supabase
 from services.email_service import send_verification_email, send_password_reset_email
 import secrets
@@ -31,8 +32,8 @@ class ResetPasswordRequest(BaseModel):
 def create_access_token(data: dict):
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(hours=72)  # 72 hours = 3 days
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, os.getenv("JWT_SECRET"), algorithm="HS256")
+    to_encode.update({"exp": expire, "iat": datetime.utcnow()})
+    return jwt.encode(to_encode, os.getenv("SECRET_KEY"), algorithm="HS256")
 
 @router.post("/register")
 async def register(request: RegisterRequest, background_tasks: BackgroundTasks):
@@ -52,7 +53,7 @@ async def register(request: RegisterRequest, background_tasks: BackgroundTasks):
             }
         })
         
-        if response.user:
+        if response and response.user:
             # Generate our own verification token
             verification_token = secrets.token_urlsafe(32)
             
@@ -75,8 +76,12 @@ async def register(request: RegisterRequest, background_tasks: BackgroundTasks):
                 "message": "Registration successful. Please check your email to verify your account.",
                 "email": request.email
             }
+    except AuthApiError as e:
+        if "User already registered" in e.message:
+            raise HTTPException(status_code=409, detail="User with this email already exists")
+        raise HTTPException(status_code=400, detail=e.message)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
 
 @router.post("/verify-email")
 async def verify_email(request: VerifyEmailRequest):
@@ -108,11 +113,16 @@ async def verify_email(request: VerifyEmailRequest):
             .eq("token", request.token)\
             .execute()
         
-        # For now, we'll consider the user verified if the token was found and deleted
-        # In production, you might want to update user metadata via admin API
+        # Update the user in Supabase Auth to mark email as confirmed
+        # This is the crucial step to enable login
+        update_response = supabase.auth.admin.update_user_by_id(
+            user_id,
+            {"email_confirm": True}
+        )
         
         return {
             "message": "Email verified successfully. You can now login.",
+            "user_id": user_id,
             "user_id": user_id
         }
     except HTTPException:
@@ -123,35 +133,36 @@ async def verify_email(request: VerifyEmailRequest):
 @router.post("/login")
 async def login(request: LoginRequest):
     """Login - check if email was verified via token"""
-    supabase = get_supabase()
-    
     try:
+        supabase = get_supabase()
+
         # Sign in user
         response = supabase.auth.sign_in_with_password({
             "email": request.email,
             "password": request.password
         })
-        
-        if response.user:
+
+        if response and response.user:
             # Check if there's still a pending verification token
             pending = supabase.table("email_verifications")\
                 .select("id")\
                 .eq("user_id", response.user.id)\
                 .execute()
-            
+
             if pending.data and len(pending.data) > 0:
                 raise HTTPException(
                     status_code=403,
                     detail="Please verify your email before logging in. Check your email for the verification link."
                 )
-            
+
             # Create JWT token
-            token = create_access_token({
+            token_data = {
                 "sub": response.user.id,
                 "email": response.user.email,
-                "username": response.user.user_metadata.get("username")
-            })
-            
+                "username": response.user.user_metadata.get("username", "")
+            }
+            token = create_access_token(token_data)
+
             return {
                 "access_token": token,
                 "token_type": "bearer",
@@ -161,9 +172,13 @@ async def login(request: LoginRequest):
                     "username": response.user.user_metadata.get("username")
                 }
             }
+        else:
+            raise HTTPException(status_code=401, detail="Login failed - invalid response from authentication service")
+
     except HTTPException:
         raise
     except Exception as e:
+        print(f"Login error: {str(e)}")  # Debug logging
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
 @router.post("/logout")
@@ -249,13 +264,13 @@ async def reset_password(request: ResetPasswordRequest):
         
         user_id = reset["user_id"]
         
-        # Get user email for Supabase auth update
-        user_result = supabase.table("users").select("email").eq("id", user_id).execute()
-        if not user_result.data:
+        # Get user object using admin API to update password
+        user_response = supabase.auth.admin.get_user_by_id(user_id)
+        if not user_response:
             raise HTTPException(status_code=400, detail="User not found")
         
-        user_email = user_result.data[0]["email"]
-        
+        # The user object is directly available
+
         # Update password in Supabase Auth (using admin API)
         # Note: This requires service role key
         auth_response = supabase.auth.admin.update_user_by_id(

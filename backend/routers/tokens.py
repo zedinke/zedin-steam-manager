@@ -6,7 +6,6 @@ import secrets
 import os
 from services.supabase_client import get_supabase
 from services.email_service import send_token_email, send_expiry_notification
-from routers.auth import create_access_token
 
 router = APIRouter()
 
