@@ -3,6 +3,8 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import VerifyEmailPage from './pages/VerifyEmailPage'
 import DashboardPage from './pages/DashboardPage'
+import TokenGeneratePage from './pages/TokenGeneratePage'
+import TokenActivatePage from './pages/TokenActivatePage'
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const token = localStorage.getItem('token')
@@ -21,6 +23,22 @@ function App() {
           element={
             <PrivateRoute>
               <DashboardPage />
+            </PrivateRoute>
+          } 
+        />
+        <Route 
+          path="/tokens/generate" 
+          element={
+            <PrivateRoute>
+              <TokenGeneratePage />
+            </PrivateRoute>
+          } 
+        />
+        <Route 
+          path="/tokens/activate" 
+          element={
+            <PrivateRoute>
+              <TokenActivatePage />
             </PrivateRoute>
           } 
         />
