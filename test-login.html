@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Login - Zedin Steam Manager</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: Arial, sans-serif; 
+            background-color: #121212; 
+            color: white;
+            padding: 20px;
+        }
+        .debug { 
+            position: fixed; 
+            top: 10px; 
+            right: 10px; 
+            background: rgba(255,0,0,0.7); 
+            padding: 10px; 
+            border-radius: 4px; 
+            font-size: 12px; 
+            max-width: 300px; 
+            z-index: 1000;
+        }
+        .container { max-width: 600px; margin: 0 auto; }
+        .form { background: #1e1e1e; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        input, button { 
+            width: 100%; 
+            padding: 12px; 
+            margin: 10px 0; 
+            border: 1px solid #555; 
+            border-radius: 4px; 
+            background: #2e2e2e; 
+            color: white; 
+        }
+        button { 
+            background: #2196f3; 
+            cursor: pointer; 
+            border: none; 
+        }
+        button:hover { background: #1976d2; }
+        .success { background: #4caf50; color: white; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .error { background: #f44336; color: white; padding: 10px; border-radius: 4px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="debug" id="debug">Debug: Initializing...</div>
+    
+    <div class="container">
+        <h1>🔍 Login Test Page</h1>
+        
+        <!-- Login Form -->
+        <div id="login-section" class="form">
+            <h2>Login Form</h2>
+            <input type="email" id="email" placeholder="Email" value="test@example.com">
+            <input type="password" id="password" placeholder="Password" value="password123">
+            <button onclick="testLogin()">🚀 Test Login</button>
+        </div>
+        
+        <!-- Dashboard Section (hidden initially) -->
+        <div id="dashboard-section" style="display: none;" class="form">
+            <h2>✅ Dashboard</h2>
+            <p>Login successful! Dashboard content here.</p>
+            <button onclick="logout()">🚪 Logout</button>
+        </div>
+        
+        <!-- Messages -->
+        <div id="messages"></div>
+    </div>
+
+    <script>
+        let isLoggedIn = false;
+        
+        function updateDebug(message) {
+            const debug = document.getElementById('debug');
+            const timestamp = new Date().toLocaleTimeString();
+            debug.innerHTML += `<br>${timestamp}: ${message}`;
+            console.log('🔍', message);
+        }
+        
+        function showMessage(message, type = 'success') {
+            const messages = document.getElementById('messages');
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = message;
+            messages.appendChild(div);
+            
+            setTimeout(() => {
+                div.remove();
+            }, 5000);
+        }
+        
+        function showLoginForm() {
+            document.getElementById('login-section').style.display = 'block';
+            document.getElementById('dashboard-section').style.display = 'none';
+            updateDebug('Showing login form');
+        }
+        
+        function showDashboard() {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('dashboard-section').style.display = 'block';
+            updateDebug('Showing dashboard');
+        }
+        
+        async function testLogin() {
+            updateDebug('Login attempt started');
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showMessage('Please fill in both fields', 'error');
+                return;
+            }
+            
+            try {
+                updateDebug('Making API request...');
+                
+                // Simulate login API call
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                updateDebug('API request successful');
+                isLoggedIn = true;
+                
+                showMessage('✅ Login successful!');
+                updateDebug('State updated to logged in');
+                
+                setTimeout(() => {
+                    updateDebug('Switching to dashboard');
+                    showDashboard();
+                }, 500);
+                
+            } catch (error) {
+                updateDebug('Login failed: ' + error.message);
+                showMessage('❌ Login failed: ' + error.message, 'error');
+            }
+        }
+        
+        function logout() {
+            updateDebug('Logout triggered');
+            isLoggedIn = false;
+            showLoginForm();
+            showMessage('👋 Logged out successfully');
+        }
+        
+        // Initialize
+        updateDebug('Page loaded');
+        showLoginForm();
+    </script>
+</body>
+</html>
