@@ -66,6 +66,11 @@ fi
 
 # Pull latest changes from git
 log "Pulling latest changes from GitHub..."
+if [ ! -d ".git" ]; then
+    warning "Git repository not initialized - run deploy-production.sh first"
+    error "Please run: sudo ./deploy-production.sh"
+fi
+
 if git fetch origin && git pull origin main; then
     log "✓ Git pull completed successfully"
 else
@@ -89,22 +94,35 @@ fi
 log "Checking for frontend updates..."
 cd "$FRONTEND_DIR"
 
-# Update Node.js dependencies if package.json changed
-if git diff HEAD~1 HEAD --quiet package.json 2>/dev/null; then
-    info "No changes in package.json"
+# Check if we have package.json (old structure) or just dist/ (new structure)
+if [ -f "package.json" ]; then
+    # Old structure - update dependencies if package.json changed
+    if git diff HEAD~1 HEAD --quiet package.json 2>/dev/null; then
+        info "No changes in package.json"
+    else
+        log "Package.json changed - updating Node.js dependencies..."
+        sudo -u $SERVICE_USER npm install
+        log "✓ Node.js dependencies updated"
+    fi
+    
+    # Rebuild if source files changed
+    if git diff HEAD~1 HEAD --quiet src/ 2>/dev/null; then
+        info "No frontend source changes detected"
+    else
+        log "Frontend source changes detected - rebuilding..."
+        sudo -u $SERVICE_USER npm run build
+        log "✓ Frontend rebuilt successfully"
+    fi
 else
-    log "Package.json changed - updating Node.js dependencies..."
-    sudo -u $SERVICE_USER npm install
-    log "✓ Node.js dependencies updated"
-fi
-
-# Always rebuild frontend if source files changed
-if git diff HEAD~1 HEAD --quiet src/ 2>/dev/null; then
-    info "No frontend source changes detected"
-else
-    log "Frontend source changes detected - rebuilding..."
-    sudo -u $SERVICE_USER npm run build
-    log "✓ Frontend rebuilt successfully"
+    # New simplified structure - just check for dist/ changes
+    if git diff HEAD~1 HEAD --quiet dist/ 2>/dev/null; then
+        info "No frontend changes detected"
+    else
+        log "Simplified frontend changes detected - updating..."
+        # Ensure proper ownership
+        chown -R $SERVICE_USER:$SERVICE_USER "$FRONTEND_DIR"
+        log "✓ Frontend updated successfully"
+    fi
 fi
 
 # Check for database model changes
