@@ -74,7 +74,7 @@ export default function DashboardPage() {
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <Container maxWidth="xl" sx={{ mt: 4 }}>
         {message && (
           <Alert 
             severity={message.includes('failed') ? 'error' : 'success'} 
@@ -85,60 +85,79 @@ export default function DashboardPage() {
         )}
 
         <Grid container spacing={3}>
-          {/* Git Update Card */}
-          <Grid item xs={12} md={6}>
+          {/* Left Sidebar - Menu */}
+          <Grid item xs={12} md={2}>
             <Card>
               <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="h6">Git Updates</Typography>
-                  {updateStatus?.updates_available ? (
-                    <Chip label={`${updateStatus.commits_behind} updates`} color="warning" />
-                  ) : (
-                    <Chip icon={<CheckCircleIcon />} label="Up to date" color="success" />
-                  )}
-                </Box>
-                
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 2, mb: 2 }}>
-                  {updateStatus?.updates_available 
-                    ? 'New updates are available from the repository'
-                    : 'Your installation is up to date'}
+                <Typography variant="h6" gutterBottom>
+                  Menü
                 </Typography>
-
-                <Button
-                  variant="contained"
-                  startIcon={updating ? <CircularProgress size={20} /> : <UpdateIcon />}
-                  onClick={handleGitUpdate}
-                  disabled={updating || !updateStatus?.updates_available}
-                  fullWidth
-                >
-                  {updating ? 'Updating...' : 'Update Now'}
-                </Button>
+                <Typography variant="body2" color="text.secondary">
+                  Hamarosan...
+                </Typography>
               </CardContent>
             </Card>
           </Grid>
 
-          {/* System Info Card */}
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6">System Information</Typography>
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Version: 0.0.3-final
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Module: 1 (Installation & Base System)
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Email: {user?.email}
-                  </Typography>
-                </Box>
-              </CardContent>
-            </Card>
+          {/* Center Content */}
+          <Grid item xs={12} md={7}>
+            <Grid container spacing={3}>
+              {/* Git Update Card */}
+              <Grid item xs={12}>
+                <Card>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="h6">Git Updates</Typography>
+                      {updateStatus?.updates_available ? (
+                        <Chip label={`${updateStatus.commits_behind} updates`} color="warning" />
+                      ) : (
+                        <Chip icon={<CheckCircleIcon />} label="Up to date" color="success" />
+                      )}
+                    </Box>
+                    
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 2, mb: 2 }}>
+                      {updateStatus?.updates_available 
+                        ? 'New updates are available from the repository'
+                        : 'Your installation is up to date'}
+                    </Typography>
+
+                    <Button
+                      variant="contained"
+                      startIcon={updating ? <CircularProgress size={20} /> : <UpdateIcon />}
+                      onClick={handleGitUpdate}
+                      disabled={updating || !updateStatus?.updates_available}
+                      fullWidth
+                    >
+                      {updating ? 'Updating...' : 'Update Now'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* System Info Card */}
+              <Grid item xs={12}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6">System Information</Typography>
+                    <Box sx={{ mt: 2 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Version: 0.0.3-final
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Module: 1 (Installation & Base System)
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Email: {user?.email}
+                      </Typography>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
           </Grid>
 
-          {/* System Monitoring */}
-          <Grid item xs={12}>
+          {/* Right Sidebar - System Monitoring */}
+          <Grid item xs={12} md={3}>
             <SystemMonitor />
           </Grid>
         </Grid>

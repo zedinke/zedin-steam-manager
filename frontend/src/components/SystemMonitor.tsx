@@ -321,25 +321,28 @@ export default function SystemMonitor() {
   }
 
   return (
-    <Grid container spacing={3}>
-      {/* Left side - Disk Space */}
-      <Grid item xs={12} md={4}>
+    <Grid container spacing={2}>
+      {/* Disk Space */}
+      <Grid item xs={12}>
         <Card>
           <CardContent>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="subtitle2" gutterBottom>
               Tárhely
             </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              {formatBytes(systemInfo.disk.free)} szabad / {formatBytes(systemInfo.disk.total)} összesen
+            <Typography variant="caption" color="text.secondary" display="block">
+              {formatBytes(systemInfo.disk.free)} szabad
             </Typography>
-            <Box sx={{ mt: 2 }}>
+            <Typography variant="caption" color="text.secondary" display="block">
+              {formatBytes(systemInfo.disk.total)} összesen
+            </Typography>
+            <Box sx={{ mt: 1 }}>
               <LinearProgress 
                 variant="determinate" 
                 value={systemInfo.disk.percent} 
-                sx={{ height: 12, borderRadius: 5 }}
+                sx={{ height: 8, borderRadius: 4 }}
                 color={systemInfo.disk.percent > 90 ? 'error' : 'primary'}
               />
-              <Typography variant="body2" align="center" sx={{ mt: 1 }}>
+              <Typography variant="caption" align="center" display="block" sx={{ mt: 0.5 }}>
                 {systemInfo.disk.percent.toFixed(1)}% használva
               </Typography>
             </Box>
@@ -347,99 +350,94 @@ export default function SystemMonitor() {
         </Card>
       </Grid>
 
-      {/* Right side - All Charts */}
-      <Grid item xs={12} md={8}>
-        <Grid container spacing={2}>
-          {/* CPU Real-time */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="subtitle1" gutterBottom>
-                  CPU használat (valós idejű - 2mp)
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {systemInfo.cpu.percent.toFixed(1)}% | {systemInfo.cpu.cores} mag, {systemInfo.cpu.threads} szál
-                </Typography>
-                <Box sx={{ height: 120, mt: 1 }}>
-                  <Line data={realtimeCpuData} options={realtimeChartOptions} />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+      {/* CPU Real-time */}
+      <Grid item xs={12}>
+        <Card>
+          <CardContent>
+            <Typography variant="subtitle2" gutterBottom>
+              CPU (valós idejű)
+            </Typography>
+            <Typography variant="caption" color="text.secondary" display="block">
+              {systemInfo.cpu.percent.toFixed(1)}%
+            </Typography>
+            <Box sx={{ height: 100, mt: 1 }}>
+              <Line data={realtimeCpuData} options={realtimeChartOptions} />
+            </Box>
+          </CardContent>
+        </Card>
+      </Grid>
 
-          {/* RAM Real-time */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="subtitle1" gutterBottom>
-                  RAM használat (valós idejű - 2mp)
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {formatBytes(systemInfo.memory.free)} szabad / {formatBytes(systemInfo.memory.total)}
-                </Typography>
-                <Box sx={{ height: 120, mt: 1 }}>
-                  <Line data={realtimeMemoryData} options={realtimeChartOptions} />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+      {/* RAM Real-time */}
+      <Grid item xs={12}>
+        <Card>
+          <CardContent>
+            <Typography variant="subtitle2" gutterBottom>
+              RAM (valós idejű)
+            </Typography>
+            <Typography variant="caption" color="text.secondary" display="block">
+              {formatBytes(systemInfo.memory.free)} szabad
+            </Typography>
+            <Box sx={{ height: 100, mt: 1 }}>
+              <Line data={realtimeMemoryData} options={realtimeChartOptions} />
+            </Box>
+          </CardContent>
+        </Card>
+      </Grid>
 
-          {/* Network Real-time */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="subtitle1" gutterBottom>
-                  Hálózat (valós idejű - 2mp)
-                </Typography>
-                <Box sx={{ height: 120, mt: 1 }}>
-                  <Line data={realtimeNetworkData} options={networkChartOptions} />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+      {/* Network Real-time */}
+      <Grid item xs={12}>
+        <Card>
+          <CardContent>
+            <Typography variant="subtitle2" gutterBottom>
+              Hálózat (valós idejű)
+            </Typography>
+            <Box sx={{ height: 100, mt: 1 }}>
+              <Line data={realtimeNetworkData} options={networkChartOptions} />
+            </Box>
+          </CardContent>
+        </Card>
+      </Grid>
 
-          {/* CPU History */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="subtitle1" gutterBottom>
-                  CPU történet (2 óra - 2 perces minták)
-                </Typography>
-                <Box sx={{ height: 150, mt: 1 }}>
-                  <Line data={historyCpuData} options={historyChartOptions} />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+      {/* CPU History */}
+      <Grid item xs={12}>
+        <Card>
+          <CardContent>
+            <Typography variant="subtitle2" gutterBottom>
+              CPU történet (2 óra)
+            </Typography>
+            <Box sx={{ height: 120, mt: 1 }}>
+              <Line data={historyCpuData} options={historyChartOptions} />
+            </Box>
+          </CardContent>
+        </Card>
+      </Grid>
 
-          {/* RAM History */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="subtitle1" gutterBottom>
-                  RAM történet (2 óra - 2 perces minták)
-                </Typography>
-                <Box sx={{ height: 150, mt: 1 }}>
-                  <Line data={historyMemoryData} options={historyChartOptions} />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+      {/* RAM History */}
+      <Grid item xs={12}>
+        <Card>
+          <CardContent>
+            <Typography variant="subtitle2" gutterBottom>
+              RAM történet (2 óra)
+            </Typography>
+            <Box sx={{ height: 120, mt: 1 }}>
+              <Line data={historyMemoryData} options={historyChartOptions} />
+            </Box>
+          </CardContent>
+        </Card>
+      </Grid>
 
-          {/* Network History */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="subtitle1" gutterBottom>
-                  Hálózat történet (2 óra - 2 perces minták)
-                </Typography>
-                <Box sx={{ height: 150, mt: 1 }}>
-                  <Line data={historyNetworkData} options={networkHistoryOptions} />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+      {/* Network History */}
+      <Grid item xs={12}>
+        <Card>
+          <CardContent>
+            <Typography variant="subtitle2" gutterBottom>
+              Hálózat történet (2 óra)
+            </Typography>
+            <Box sx={{ height: 120, mt: 1 }}>
+              <Line data={historyNetworkData} options={networkHistoryOptions} />
+            </Box>
+          </CardContent>
+        </Card>
       </Grid>
     </Grid>
   )
