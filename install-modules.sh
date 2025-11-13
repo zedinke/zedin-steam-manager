@@ -223,9 +223,18 @@ deploy_frontend() {
     
     cd $INSTALL_DIR/frontend
     
+    # Clean any potential old files or caches
+    log "Cleaning frontend build cache..."
+    sudo -u $SERVICE_USER rm -rf .vite node_modules/.vite dist 2>/dev/null || true
+    
     # Check if we have source code or pre-built dist
     if [ -f "package.json" ] && [ -d "src" ]; then
         log "Building React frontend from source..."
+        
+        # Verify src structure
+        if [ ! -f "src/App.tsx" ] || [ ! -f "src/main.tsx" ]; then
+            error "Invalid frontend source structure - missing core files"
+        fi
         
         # Install dependencies
         log "Installing frontend dependencies..."
