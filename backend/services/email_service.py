@@ -1,3 +1,5 @@
+# TEST COMMIT: This is a test comment to verify git push functionality.
+
 import aiosmtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -552,7 +554,7 @@ async def send_expiry_notification(email: str, username: str, token_code: str, d
     </table>
 </body>
 </html>
-    ")
+    """)
 
     html_content = html_template.render(
         username=username,
