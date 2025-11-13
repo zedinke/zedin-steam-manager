@@ -47,16 +47,12 @@ fi
 
 # Install system packages
 sudo apt update
-sudo apt install -y python3 python3-pip python3-venv python3-full nginx curl
+sudo apt install -y python3 python3-pip python3-venv nginx curl
 
-# Install Node.js 20.x from NodeSource properly
-if ! command -v node &> /dev/null || [ "$(node -v | cut -d'.' -f1 | tr -d 'v')" -lt 18 ]; then
-    echo "Installing Node.js 20.x..."
-    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-    sudo apt install -y nodejs
-else
-    echo "Node.js $(node -v) already installed"
-fi
+# Node.js already installed, check version
+NODE_VERSION=$(node -v 2>/dev/null || echo "v0.0.0")
+echo "Node.js version: $NODE_VERSION"
+echo "npm version: $(npm -v 2>/dev/null || echo 'not installed')"
 
 echo "✅ System dependencies installed"
 
