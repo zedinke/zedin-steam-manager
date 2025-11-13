@@ -635,18 +635,7 @@ async def send_password_reset_email(email: str, username: str, reset_token: str)
                                     </td>
                                 </tr>
                             </table>
-                            <div style="background: #f8f9fa; border: 2px dashed #dee2e6; padding: 20px; border-radius: 12px; margin: 30px 0;">
-                                <p style="margin: 0 0 10px 0; color: #666; font-size: 13px;">
-                                    Ha a gomb nem működik, másold be ezt a linket a böngésződbe:
-                                </p>
-                                <p style="margin: 0; color: #667eea; font-size: 13px; word-break: break-all; font-family: 'Courier New', monospace;">
-                                    {{ reset_url }}
-                                </p>
-                            </div>
-                            <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 8px; margin: 30px 0;">
-                                <h3 style="margin: 0 0 15px 0; color: #856404; font-size: 16px;">
-                                    Biztonsági Megjegyzés
-                                </h3>
+                                """
                                 <ul style="margin: 0; padding-left: 20px; color: #856404; font-size: 14px; line-height: 1.8;">
                                     <li>Ez a link 1 órán belül lejár</li>
                                     <li>Csak egyszer használható</li>
