@@ -6,6 +6,7 @@ router = APIRouter()
 
 # Git executable path
 GIT_CMD = "/usr/bin/git"
+SYSTEMCTL_CMD = "/usr/bin/systemctl"
 
 @router.post("/git-update")
 async def git_update():
@@ -52,8 +53,8 @@ async def git_update():
         )
         
         # Restart services
-        subprocess.run(["systemctl", "restart", "zedin-backend"], check=False)
-        subprocess.run(["systemctl", "restart", "zedin-frontend"], check=False)
+        subprocess.run([SYSTEMCTL_CMD, "restart", "zedin-backend"], check=False)
+        subprocess.run([SYSTEMCTL_CMD, "restart", "zedin-frontend"], check=False)
         
         return {
             "message": f"Updated successfully ({commits_behind} commits)",
