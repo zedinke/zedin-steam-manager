@@ -299,7 +299,7 @@ async def send_verification_email(email: str, username: str, token: str):
     Verification URL: {verification_url}
     {'='*80}
     """
-        _log_dev_email(
+                    """
             log_message,
             file_path="logs/verification_urls.txt",
             file_content=f"{email}: {verification_url}\n"
