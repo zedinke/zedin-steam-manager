@@ -42,9 +42,10 @@ EOF
 echo "✅ Configuration created: backend/.env"
 echo ""
 echo "Initializing database..."
+echo "⚠️  If you have existing tables with different schema, they will be reset."
 cd backend
 source venv/bin/activate
-python init_db.py
+python reset_db.py
 deactivate
 cd ..
 
