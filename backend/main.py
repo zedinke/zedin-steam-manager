@@ -10,7 +10,7 @@ from routers import auth, system, dashboard
 
 app = FastAPI(
     title="Zedin Steam Manager API",
-    version="0.0.1",
+    version="0.0.2-test",
     description="Professional Steam Server Manager"
 )
 
@@ -32,7 +32,7 @@ app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"]
 async def health_check():
     return {
         "status": "healthy",
-        "version": "0.0.1",
+        "version": "0.0.2-test",
         "service": "Zedin Steam Manager"
     }
 
