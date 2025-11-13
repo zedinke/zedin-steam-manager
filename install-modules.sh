@@ -224,9 +224,11 @@ deploy_frontend() {
     
     cd $INSTALL_DIR/frontend
     
-    # Clean any potential old files or caches
+    # Clean any potential old files or caches - aggressive cleanup
     log "Cleaning frontend build cache and old files..."
     sudo -u $SERVICE_USER rm -rf .vite node_modules/.vite dist 2>/dev/null || true
+    sudo -u $SERVICE_USER rm -rf node_modules/.cache 2>/dev/null || true
+    sudo -u $SERVICE_USER npm cache clean --force 2>/dev/null || true
     
     # Remove any untracked files from git that shouldn't be there
     if [ -d ".git" ]; then
@@ -410,10 +412,10 @@ server {
         add_header Expires "0";
     }
     
-    # Static assets caching
+    # Static assets - short cache to allow updates (was: 1y)
     location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
+        expires 1h;
+        add_header Cache-Control "public, max-age=3600, must-revalidate";
     }
     
     # Backend API
