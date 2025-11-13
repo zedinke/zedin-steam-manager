@@ -268,14 +268,24 @@ async def send_verification_email(email: str, username: str, token: str):
     
     # Check if SMTP is configured
     if not smtp_password or smtp_password == "change_me_in_production":
-        # Development mode - just print the verification URL
-        print("\n" + "="*80)
-        print("📧 EMAIL VERIFICATION (Development Mode)")
-        print("="*80)
-        print(f"To: {email}")
-        print(f"Username: {username}")
-        print(f"Verification URL: {verification_url}")
-        print("="*80 + "\n")
+        # Development mode - write verification URL to file and log
+        log_message = f"""
+{'='*80}
+📧 EMAIL VERIFICATION (Development Mode)
+{'='*80}
+To: {email}
+Username: {username}
+Verification URL: {verification_url}
+{'='*80}
+"""
+        print(log_message, flush=True)
+        
+        # Also write to file for easier access
+        try:
+            with open("/tmp/verification_urls.txt", "a") as f:
+                f.write(f"{email}: {verification_url}\n")
+        except:
+            pass
         return
     
     try:
@@ -287,7 +297,7 @@ async def send_verification_email(email: str, username: str, token: str):
             password=smtp_password,
             start_tls=True
         )
-        print(f"✅ Email sent successfully to {email}")
+        print(f"✅ Email sent successfully to {email}", flush=True)
     except Exception as e:
-        print(f"❌ Failed to send email: {e}")
-        print(f"📧 Verification URL: {verification_url}")
+        print(f"❌ Failed to send email: {e}", flush=True)
+        print(f"📧 Verification URL: {verification_url}", flush=True)
