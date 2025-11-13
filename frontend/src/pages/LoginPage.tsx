@@ -78,6 +78,14 @@ export default function LoginPage() {
 
           <Box sx={{ textAlign: 'center', mt: 2 }}>
             <Typography variant="body2">
+              <Link to="/forgot-password" style={{ color: '#2196f3' }}>
+                Elfelejtett jelszó?
+              </Link>
+            </Typography>
+          </Box>
+
+          <Box sx={{ textAlign: 'center', mt: 2 }}>
+            <Typography variant="body2">
               Don't have an account?{' '}
               <Link to="/register" style={{ color: '#2196f3' }}>
                 Register here
